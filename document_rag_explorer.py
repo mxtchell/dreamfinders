@@ -285,95 +285,10 @@ def get_pdf_thumbnail(pack_file_path, file_name, page_num, image_height=300, ima
     logger.info(f"DEBUG THUMBNAIL: ==> Starting thumbnail generation for {file_name} page {page_num}")
     logger.info(f"DEBUG THUMBNAIL: ==> Requested dimensions: {image_width}x{image_height}")
     
-    try:
-        # Import the knowledge base query function like in ddoc_ex.py
-        logger.info(f"DEBUG THUMBNAIL: ==> Importing api.file_storage.query_file_by_name")
-        from api.file_storage import query_file_by_name
-        logger.info(f"DEBUG THUMBNAIL: ==> Successfully imported query_file_by_name")
+    # Knowledge base API not available in skill environment, use fallback
+    logger.info(f"DEBUG THUMBNAIL: ==> Knowledge base API not available in skill environment, using fallback")
+    return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
         
-        # Get tenant from environment like in ddoc_ex.py  
-        tenant = os.environ.get('AR_TENANT_ID', 'dreamfinders')
-        logger.info(f"DEBUG THUMBNAIL: ==> Using tenant: {tenant}")
-        
-        # Query the knowledge base for the PDF file
-        logger.info(f"DEBUG THUMBNAIL: ==> Querying knowledge base for file: '{file_name}'")
-        kbase_lookup = query_file_by_name(tenant, file_name)
-        logger.info(f"DEBUG THUMBNAIL: ==> Knowledge base query result type: {type(kbase_lookup)}")
-        
-        if not kbase_lookup:
-            logger.warning(f"DEBUG THUMBNAIL: ==> File '{file_name}' not found in knowledge base")
-            logger.info(f"DEBUG THUMBNAIL: ==> Creating fallback thumbnail")
-            return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
-        
-        logger.info(f"DEBUG THUMBNAIL: ==> Knowledge base lookup keys: {list(kbase_lookup.keys())}")
-        
-        # Get the file ID and PDF data like in ddoc_ex.py
-        file_id = list(kbase_lookup.keys())[0]
-        logger.info(f"DEBUG THUMBNAIL: ==> Found file in knowledge base with ID: {file_id}")
-        logger.info(f"DEBUG THUMBNAIL: ==> File metadata keys: {list(kbase_lookup[file_id].keys())}")
-        
-        # Check if 'file' key exists
-        if 'file' not in kbase_lookup[file_id]:
-            logger.error(f"DEBUG THUMBNAIL: ==> 'file' key not found in knowledge base data")
-            logger.info(f"DEBUG THUMBNAIL: ==> Available keys: {list(kbase_lookup[file_id].keys())}")
-            return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
-        
-        # Get base64 PDF data from knowledge base
-        logger.info(f"DEBUG THUMBNAIL: ==> Decoding base64 PDF data")
-        pdf_base64 = base64.b64decode(kbase_lookup[file_id]['file'])
-        logger.info(f"DEBUG THUMBNAIL: ==> Retrieved PDF data from knowledge base, size: {len(pdf_base64)} bytes")
-        
-        # Use PyMuPDF to render the page exactly like ddoc_ex.py
-        logger.info(f"DEBUG THUMBNAIL: ==> Opening PDF with PyMuPDF from knowledge base data")
-        doc = fitz.open(stream=pdf_base64, filetype="pdf")
-        logger.info(f"DEBUG THUMBNAIL: ==> PDF opened successfully, total pages: {len(doc)}")
-        
-        if page_num < 1 or page_num > len(doc):
-            logger.warning(f"DEBUG THUMBNAIL: ==> Page {page_num} out of range for PDF {file_name} (has {len(doc)} pages)")
-            doc.close()
-            return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
-        
-        # Load the specific page (convert to 0-based index)
-        logger.info(f"DEBUG THUMBNAIL: ==> Loading page {page_num} (0-based index: {page_num - 1})")
-        page = doc.load_page(page_num - 1)
-        logger.info(f"DEBUG THUMBNAIL: ==> Page loaded successfully, page size: {page.rect}")
-        
-        # Render page to pixmap
-        logger.info(f"DEBUG THUMBNAIL: ==> Rendering page to pixmap")
-        pix = page.get_pixmap()
-        logger.info(f"DEBUG THUMBNAIL: ==> Rendered pixmap with dimensions: {pix.width}x{pix.height}")
-        
-        # Convert to PIL Image like ddoc_ex.py
-        logger.info(f"DEBUG THUMBNAIL: ==> Converting pixmap to PIL Image")
-        image = Image.open(io.BytesIO(pix.tobytes()))
-        logger.info(f"DEBUG THUMBNAIL: ==> Converted to PIL image: {image.size}")
-        
-        # Resize to exact thumbnail dimensions like ddoc_ex.py
-        if image_height is not None and image_width is not None:
-            logger.info(f"DEBUG THUMBNAIL: ==> Resizing image from {image.size} to ({image_width}, {image_height})")
-            image = image.resize((image_width, image_height), Image.Resampling.LANCZOS)
-            logger.info(f"DEBUG THUMBNAIL: ==> Resized image to: {image.size}")
-        
-        # Convert to base64 like ddoc_ex.py
-        logger.info(f"DEBUG THUMBNAIL: ==> Converting image to base64")
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        logger.info(f"DEBUG THUMBNAIL: ==> Generated base64 string length: {len(image_base64)} characters")
-        
-        # Cleanup
-        doc.close()
-        logger.info(f"DEBUG THUMBNAIL: ==> SUCCESS: Generated thumbnail for {file_name} page {page_num} from knowledge base")
-        
-        return image_base64
-        
-    except ImportError as e:
-        logger.error(f"DEBUG: PyMuPDF (fitz) not available: {e}")
-        return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
-    except Exception as e:
-        logger.error(f"DEBUG: Error generating thumbnail for {file_name}: {e}")
-        logger.error(f"DEBUG: Full traceback: {traceback.format_exc()}")
-        return create_fallback_thumbnail(file_name, page_num, image_width, image_height)
 
 def create_fallback_thumbnail(file_name, page_num, image_width, image_height):
     """Create a clean fallback thumbnail when PDF rendering fails"""
@@ -626,23 +541,48 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
         raise e
 
 def calculate_simple_relevance(text, search_terms):
-    """Enhanced relevance scoring with better keyword matching and domain awareness"""
+    """Enhanced relevance scoring with company-specific matching to prevent cross-contamination"""
     text_lower = text.lower()
     score = 0.0
     
     logger.info(f"DEBUG: Calculating relevance for text snippet: '{text_lower[:100]}...'")
     logger.info(f"DEBUG: Search terms: {search_terms}")
     
+    # Detect if this is a company-specific query
+    is_meritage_query = False
+    is_lennar_query = False
+    
+    for term in search_terms:
+        if term and 'meritage' in term.lower():
+            is_meritage_query = True
+        elif term and 'lennar' in term.lower():
+            is_lennar_query = True
+    
+    # Check document source - CRITICAL for preventing cross-contamination
+    is_meritage_doc = 'meritage' in text_lower
+    is_lennar_doc = 'lennar' in text_lower
+    
+    # Apply strict company filtering - if query is company-specific, only match that company's documents
+    if is_meritage_query and is_lennar_doc:
+        logger.info(f"DEBUG: COMPANY FILTER: Meritage query but Lennar document - REJECTED")
+        return 0.0
+    elif is_lennar_query and is_meritage_doc:
+        logger.info(f"DEBUG: COMPANY FILTER: Lennar query but Meritage document - REJECTED")
+        return 0.0
+    
     # Key competitive intelligence terms that should boost relevance
     competitive_keywords = {
+        'national sales event': 1.5,  # Exact phrase gets highest score
+        'sales event': 1.2,
         'pricing': 0.6, 'price': 0.5, 'cost': 0.4, 'pricing strategy': 0.8,
         'promotion': 0.6, 'promotional': 0.6, 'promo': 0.5, 'special offer': 0.8,
         'financing': 0.6, 'finance': 0.5, 'rate': 0.4, 'interest': 0.4,
-        'sales event': 0.8, 'event': 0.4, 'sale': 0.3,
-        'inventory': 0.6, 'available': 0.3, 'homes': 0.2,
-        'lennar': 0.7, 'meritage': 0.7, 'builder': 0.4,
+        'event': 0.4, 'sale': 0.3,
+        'inventory': 0.6, 'available': 0.3,
+        'meritage': 1.0, 'lennar': 1.0, 'builder': 0.4,
         'reduction': 0.8, 'reduced': 0.7, 'discount': 0.7,
-        'national': 0.5, 'limited time': 0.6, 'special': 0.4
+        'national': 0.5, 'limited time': 0.6, 'special': 0.4,
+        'homes': 0.1  # Reduced score for generic terms
     }
     
     for term in search_terms:
@@ -654,7 +594,7 @@ def calculate_simple_relevance(text, search_terms):
         # Check for exact phrase matches first (highest priority)
         if term_lower in text_lower:
             occurrences = text_lower.count(term_lower)
-            phrase_score = min(occurrences * 0.6, 1.2)  # Boost for exact phrases
+            phrase_score = min(occurrences * 1.0, 2.0)  # Boost for exact phrases
             score += phrase_score
             logger.info(f"DEBUG: Found exact phrase '{term}' {occurrences} times, added {phrase_score} to score")
             continue
@@ -662,46 +602,54 @@ def calculate_simple_relevance(text, search_terms):
         # Break down into individual words for partial matching
         term_words = term_lower.split()
         term_total_score = 0
+        matched_words = 0
         
         for word in term_words:
             if len(word) < 3:  # Skip very short words
                 continue
                 
             if word in text_lower:
+                matched_words += 1
                 occurrences = text_lower.count(word)
                 
                 # Check if it's a competitive intelligence keyword
                 if word in competitive_keywords:
                     base_score = competitive_keywords[word]
-                    logger.info(f"DEBUG: Found competitive keyword '{word}' with boosted score")
+                    logger.info(f"DEBUG: Found competitive keyword '{word}' with boosted score {base_score}")
                 elif len(word) > 8:  # Long words are usually more specific
                     base_score = 0.3
                 elif len(word) > 5:
                     base_score = 0.2
                 else:
-                    base_score = 0.15
+                    base_score = 0.1  # Lower base score for generic words
                 
                 word_score = min(occurrences * base_score, 0.8)
                 term_total_score += word_score
                 logger.info(f"DEBUG: Found word '{word}' {occurrences} times, added {word_score} to score")
         
+        # Boost score if multiple words from the search term are found
+        if matched_words > 1:
+            completeness_bonus = matched_words * 0.1
+            term_total_score += completeness_bonus
+            logger.info(f"DEBUG: Completeness bonus for {matched_words} matched words: {completeness_bonus}")
+        
         # Check for multi-word competitive phrases
         for phrase, boost in competitive_keywords.items():
             if ' ' in phrase and phrase in text_lower:
                 phrase_occurrences = text_lower.count(phrase)
-                phrase_boost = min(phrase_occurrences * boost, 1.0)
+                phrase_boost = min(phrase_occurrences * boost, 1.5)
                 term_total_score += phrase_boost
                 logger.info(f"DEBUG: Found competitive phrase '{phrase}' {phrase_occurrences} times, added {phrase_boost} boost")
         
         score += term_total_score
     
-    # Apply document type bonuses
-    if 'meritage' in text_lower and any('meritage' in term.lower() for term in search_terms):
-        score *= 1.2
-        logger.info(f"DEBUG: Applied Meritage document bonus")
-    elif 'lennar' in text_lower and any('lennar' in term.lower() for term in search_terms):
-        score *= 1.2
-        logger.info(f"DEBUG: Applied Lennar document bonus")
+    # Apply strong company-specific bonuses for correct matches
+    if is_meritage_query and is_meritage_doc:
+        score *= 1.5
+        logger.info(f"DEBUG: Applied strong Meritage match bonus (1.5x)")
+    elif is_lennar_query and is_lennar_doc:
+        score *= 1.5
+        logger.info(f"DEBUG: Applied strong Lennar match bonus (1.5x)")
     
     final_score = min(score, 1.0)
     logger.info(f"DEBUG: Final relevance score: {final_score}")
@@ -779,24 +727,22 @@ def generate_rag_response(user_question, docs):
         logger.info(f"DEBUG: Generating thumbnail for reference {i+1}: {doc.file_name} page {doc.chunk_index}")
         thumbnail_base64 = get_pdf_thumbnail(pack_file_path, doc.file_name, doc.chunk_index, 120, 160)
         
-        # Also get the knowledge base file ID for proper URL generation like ddoc_ex.py
-        try:
-            logger.info(f"DEBUG URL: ==> Getting file ID for URL generation: {doc.file_name}")
-            from api.file_storage import query_file_by_name
-            tenant = os.environ.get('AR_TENANT_ID', 'dreamfinders')
-            kbase_lookup = query_file_by_name(tenant, doc.file_name)
-            if kbase_lookup:
-                file_id = list(kbase_lookup.keys())[0]
-                # Update the URL to use the actual knowledge base file ID
-                base_url = "https://dreamfinders.poc.answerrocket.com"
-                doc.url = f"{base_url}/apps/chat/knowledge-base/{file_id}#page={doc.chunk_index}"
-                logger.info(f"DEBUG URL: ==> Updated URL to use file ID: {doc.url}")
-            else:
-                logger.warning(f"DEBUG URL: ==> No knowledge base lookup result for {doc.file_name}")
-        except Exception as e:
-            logger.warning(f"DEBUG URL: ==> Could not update URL with file ID: {e}")
-            import traceback
-            logger.warning(f"DEBUG URL: ==> Full traceback: {traceback.format_exc()}")
+        # Use hardcoded file IDs since API not available - you provided these IDs
+        logger.info(f"DEBUG URL: ==> Using provided file IDs for URL generation: {doc.file_name}")
+        base_url = "https://dreamfinders.poc.answerrocket.com"
+        
+        # Map file names to the specific IDs you provided
+        file_id_map = {
+            "New Homes for Sale _ Lennar.pdf": "abb40c5f-f259-48bf-85c3-d2ed1ea956b8",
+            "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf": "7f0292db-d935-4c90-b65b-897bb98167f9"
+        }
+        
+        if doc.file_name in file_id_map:
+            file_id = file_id_map[doc.file_name]
+            doc.url = f"{base_url}/apps/chat/knowledge-base/{file_id}#page={doc.chunk_index}"
+            logger.info(f"DEBUG URL: ==> Updated URL with mapped file ID: {doc.url}")
+        else:
+            logger.warning(f"DEBUG URL: ==> No file ID mapping found for {doc.file_name}, using default URL")
         
         ref = {
             'number': i + 1,

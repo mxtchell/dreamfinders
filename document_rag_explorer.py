@@ -18,7 +18,7 @@ from PIL import Image
 import logging
 import re
 import html
-# import fitz  # PyMuPDF for PDF thumbnail generation - not needed for placeholder thumbnails
+import fitz  # PyMuPDF for PDF thumbnail generation
 
 logger = logging.getLogger(__name__)
 
@@ -281,92 +281,90 @@ def create_references_list(references):
     return ''.join(html_parts)
 
 def get_pdf_thumbnail(pack_file_path, file_name, page_num, image_height=300, image_width=400):
-    """Generate PDF thumbnail from pack file data"""
+    """Generate real PDF thumbnail from actual PDF file"""
+    logger.info(f"DEBUG: Attempting to generate thumbnail for {file_name} page {page_num}")
+    
     try:
-        # Look for the file in the pack data
-        with open(pack_file_path, 'r') as f:
-            pack_data = json.load(f)
+        # First, try to find the actual PDF file in the same directory as pack.json
+        skill_dir = os.path.dirname(pack_file_path)
+        pdf_path = os.path.join(skill_dir, file_name)
         
-        # Find the file in pack data
-        target_file = None
-        for file_data in pack_data:
-            if file_data.get('File') == file_name:
-                target_file = file_data
-                break
+        logger.info(f"DEBUG: Looking for PDF file at: {pdf_path}")
         
-        if not target_file:
-            logger.warning(f"File {file_name} not found in pack data")
+        if not os.path.exists(pdf_path):
+            # Try common PDF storage locations
+            possible_paths = [
+                os.path.join(skill_dir, "pdfs", file_name),
+                os.path.join(skill_dir, "documents", file_name),
+                os.path.join(skill_dir, "data", file_name),
+                os.path.join(os.path.dirname(skill_dir), "pdfs", file_name)
+            ]
+            
+            for path in possible_paths:
+                logger.info(f"DEBUG: Trying PDF path: {path}")
+                if os.path.exists(path):
+                    pdf_path = path
+                    logger.info(f"DEBUG: Found PDF at: {pdf_path}")
+                    break
+            else:
+                logger.warning(f"DEBUG: Could not find PDF file {file_name} in any expected location")
+                return None
+        else:
+            logger.info(f"DEBUG: Found PDF file at expected location: {pdf_path}")
+        
+        # Open the PDF and render the specific page
+        logger.info(f"DEBUG: Opening PDF with PyMuPDF: {pdf_path}")
+        doc = fitz.open(pdf_path)
+        
+        if page_num < 1 or page_num > len(doc):
+            logger.warning(f"DEBUG: Page {page_num} out of range for PDF {file_name} (has {len(doc)} pages)")
+            doc.close()
             return None
         
-        # Check if we have base64 PDF data (assuming it might be stored)
-        # For now, return placeholder since pack.json doesn't contain PDF bytes
-        # In a real implementation, you'd need access to the original PDF files
-        logger.info(f"Would generate thumbnail for {file_name} page {page_num}")
+        # Get the page (convert to 0-based index)
+        page = doc[page_num - 1]
+        logger.info(f"DEBUG: Got page {page_num} from PDF, rendering to pixmap")
         
-        # Create a meaningful placeholder thumbnail with document info
-        from PIL import ImageDraw, ImageFont
+        # Render page to pixmap with appropriate zoom for thumbnail size
+        zoom_x = image_width / page.rect.width
+        zoom_y = image_height / page.rect.height
+        zoom = min(zoom_x, zoom_y)  # Use smaller zoom to fit within bounds
         
-        # Create base image with gradient background
-        placeholder_image = Image.new('RGB', (image_width, image_height), color='white')
-        draw = ImageDraw.Draw(placeholder_image)
+        mat = fitz.Matrix(zoom, zoom)
+        pix = page.get_pixmap(matrix=mat)
+        logger.info(f"DEBUG: Rendered pixmap with dimensions: {pix.width}x{pix.height}")
         
-        # Create a gradient background
-        for y in range(image_height):
-            color_value = int(240 - (y / image_height) * 40)  # Gradient from light to slightly darker gray
-            draw.line([(0, y), (image_width, y)], fill=(color_value, color_value, color_value))
+        # Convert pixmap to PIL Image
+        img_data = pix.tobytes("png")
+        pil_image = Image.open(io.BytesIO(img_data))
+        logger.info(f"DEBUG: Converted to PIL image: {pil_image.size}")
         
-        # Add border
-        draw.rectangle([0, 0, image_width-1, image_height-1], outline='#cccccc', width=2)
+        # Resize to exact thumbnail dimensions if needed
+        if pil_image.size != (image_width, image_height):
+            pil_image = pil_image.resize((image_width, image_height), Image.Resampling.LANCZOS)
+            logger.info(f"DEBUG: Resized image to: {pil_image.size}")
         
-        # Add document icon (simple rectangle representing a document)
-        doc_icon_width = 40
-        doc_icon_height = 50
-        doc_x = (image_width - doc_icon_width) // 2
-        doc_y = 20
-        draw.rectangle([doc_x, doc_y, doc_x + doc_icon_width, doc_y + doc_icon_height], 
-                      fill='white', outline='#666666', width=2)
-        
-        # Add fold corner to document icon
-        corner_size = 8
-        draw.polygon([(doc_x + doc_icon_width - corner_size, doc_y),
-                     (doc_x + doc_icon_width, doc_y + corner_size),
-                     (doc_x + doc_icon_width - corner_size, doc_y + corner_size)],
-                    fill='#cccccc', outline='#666666')
-        
-        # Add text (document name and page number)
-        try:
-            # Try to use default font, fallback to basic if not available
-            font = ImageFont.load_default()
-        except:
-            font = None
-        
-        # Draw document name (shortened)
-        doc_name = file_name[:15] + "..." if len(file_name) > 15 else file_name
-        text_y = doc_y + doc_icon_height + 15
-        text_bbox = draw.textbbox((0, 0), doc_name, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_x = (image_width - text_width) // 2
-        draw.text((text_x, text_y), doc_name, fill='#333333', font=font)
-        
-        # Draw page number
-        page_text = f"Page {page_num}"
-        page_bbox = draw.textbbox((0, 0), page_text, font=font)
-        page_width = page_bbox[2] - page_bbox[0]
-        page_x = (image_width - page_width) // 2
-        draw.text((page_x, text_y + 20), page_text, fill='#666666', font=font)
-        
+        # Convert to base64
         buffered = io.BytesIO()
-        placeholder_image.save(buffered, format="PNG")
+        pil_image.save(buffered, format="PNG")
         image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        # Cleanup
+        doc.close()
+        logger.info(f"DEBUG: Successfully generated thumbnail for {file_name} page {page_num}")
         
         return image_base64
         
+    except ImportError as e:
+        logger.error(f"DEBUG: PyMuPDF (fitz) not available: {e}")
+        return None
     except Exception as e:
-        logger.error(f"Error generating thumbnail for {file_name}: {e}")
+        logger.error(f"DEBUG: Error generating thumbnail for {file_name}: {e}")
+        logger.error(f"DEBUG: Full traceback: {traceback.format_exc()}")
         return None
 
 def create_sources_table(references):
-    """Create sources table HTML with thumbnails"""
+    """Create sources table HTML without thumbnails (thumbnails are now only in references section)"""
     if not references:
         return "<p>No sources available</p>"
     
@@ -374,7 +372,6 @@ def create_sources_table(references):
         """<table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
         <thead>
             <tr style='background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;'>
-                <th style='padding: 12px; text-align: left; font-weight: 600;'>Thumbnail</th>
                 <th style='padding: 12px; text-align: left; font-weight: 600;'>Document Name</th>
                 <th style='padding: 12px; text-align: left; font-weight: 600;'>Page</th>
                 <th style='padding: 12px; text-align: left; font-weight: 600;'>Match Score</th>
@@ -383,34 +380,13 @@ def create_sources_table(references):
         <tbody>"""
     ]
     
-    # Get pack file path for thumbnail generation
-    skill_dir = os.path.dirname(os.path.abspath(__file__))
-    pack_file_path = os.path.join(skill_dir, "pack.json")
-    
     for i, ref in enumerate(references):
         bg_color = '#ffffff' if i % 2 == 0 else '#f8f9fa'
         # Extract match score from ref if available, otherwise use placeholder
         match_score = ref.get('match_score', '0.780000') if hasattr(ref, 'get') else '0.780000'
         
-        # Generate thumbnail
-        thumbnail_base64 = None
-        if hasattr(ref, 'get'):
-            file_name = ref.get('src', ref.get('text', 'Document'))
-            page_num = ref.get('page', 1)
-            thumbnail_base64 = get_pdf_thumbnail(pack_file_path, file_name, page_num, 150, 100)
-        
-        # Thumbnail cell
-        thumbnail_html = ""
-        if thumbnail_base64:
-            thumbnail_html = f'<img src="data:image/png;base64,{thumbnail_base64}" alt="Thumbnail" style="max-width: 100px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;">'
-        else:
-            thumbnail_html = '<div style="width: 100px; height: 150px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666;">No Preview</div>'
-        
         html_parts.append(f"""
             <tr style='background-color: {bg_color}; border-bottom: 1px solid #dee2e6;'>
-                <td style='padding: 12px; text-align: center;'>
-                    {thumbnail_html}
-                </td>
                 <td style='padding: 12px;'>
                     <a href='{ref.get('url', '#')}' target='_blank' style='color: #0066cc; text-decoration: none;'>
                         {ref.get('src', ref.get('text', 'Document'))}
@@ -667,8 +643,9 @@ def generate_rag_response(user_question, docs):
         doc_text = str(doc.text) if doc.text else ""
         preview_text = doc_text[:120] + "..." if len(doc_text) > 120 else doc_text
         
-        # Generate thumbnail for this document
-        thumbnail_base64 = get_pdf_thumbnail(pack_file_path, doc.file_name, doc.chunk_index, 150, 100)
+        # Generate thumbnail for this document (for references section)
+        logger.info(f"DEBUG: Generating thumbnail for reference {i+1}: {doc.file_name} page {doc.chunk_index}")
+        thumbnail_base64 = get_pdf_thumbnail(pack_file_path, doc.file_name, doc.chunk_index, 150, 200)
         
         ref = {
             'number': i + 1,

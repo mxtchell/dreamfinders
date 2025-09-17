@@ -645,9 +645,9 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
             for source in scored_sources:
                 if len(matches) >= int(max_sources):
                     break
-                if chars_so_far + len(source['text']) > int(max_characters):
-                    if not matches:
-                        matches.append(source)
+
+                # Always include at least 2 documents if available, then respect character limit
+                if len(matches) >= 2 and chars_so_far + len(source['text']) > int(max_characters):
                     break
 
                 matches.append(source)

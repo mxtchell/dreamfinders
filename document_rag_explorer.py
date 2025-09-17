@@ -19,6 +19,9 @@ import logging
 import re
 import html
 import fitz  # PyMuPDF for PDF thumbnail generation
+import numpy as np
+from typing import List
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -510,10 +513,16 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
 
         logger.info(f"DEBUG: Matching against {len(loaded_sources)} document sources")
 
-        # Try to use embeddings if available
+        # Try to use OpenAI embeddings directly
         try:
-            from sp_tools.embedding_match import EmbeddingMatchManager
-            logger.info("DEBUG: Using embedding-based matching")
+            logger.info("DEBUG: Using OpenAI embeddings for semantic search")
+
+            # Get embeddings and calculate similarities
+            matches = find_matches_with_openai_embeddings(
+                user_question, topics, loaded_sources, match_threshold, max_sources, max_characters
+            )
+
+            logger.info(f"DEBUG: OpenAI embeddings found {len(matches)} matches")
 
             # Create embedding manager for loaded sources
             loaded_source_matcher = EmbeddingMatchManager(
@@ -930,6 +939,139 @@ def force_ascii_replace(html_string):
     cleaned = ''.join(ch for ch in cleaned if ord(ch) >= 32 or ch in '\n\r\t')
     
     return cleaned
+
+# OpenAI Embedding Functions
+
+def get_openai_embedding(text: str) -> List[float]:
+    """Get OpenAI embedding for a text string"""
+    try:
+        from ar_analytics import ArUtils
+        ar_utils = ArUtils()
+
+        # Check if ArUtils has embedding method
+        if hasattr(ar_utils, 'get_embedding'):
+            return ar_utils.get_embedding(text)
+
+        # Otherwise use OpenAI API directly
+        import openai
+        import os
+
+        # Get API key from environment
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("No OpenAI API key found")
+
+        openai.api_key = api_key
+
+        response = openai.Embedding.create(
+            model="text-embedding-ada-002",
+            input=text.replace("\n", " ")
+        )
+
+        return response['data'][0]['embedding']
+
+    except Exception as e:
+        logger.error(f"ERROR: Failed to get OpenAI embedding: {e}")
+        raise e
+
+def cosine_similarity(a: List[float], b: List[float]) -> float:
+    """Calculate cosine similarity between two vectors"""
+    try:
+        a_array = np.array(a)
+        b_array = np.array(b)
+
+        dot_product = np.dot(a_array, b_array)
+        norm_a = np.linalg.norm(a_array)
+        norm_b = np.linalg.norm(b_array)
+
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+
+        similarity = dot_product / (norm_a * norm_b)
+        return float(similarity)
+
+    except Exception as e:
+        logger.error(f"ERROR: Failed to calculate cosine similarity: {e}")
+        return 0.0
+
+def find_matches_with_openai_embeddings(user_question, topics, loaded_sources, match_threshold, max_sources, max_characters):
+    """Find document matches using OpenAI embeddings"""
+    logger.info("DEBUG: Starting OpenAI embedding search")
+
+    try:
+        # Combine question and topics for search query
+        search_query = user_question
+        if topics:
+            search_query += " " + " ".join(topics)
+
+        logger.info(f"DEBUG: Getting embedding for search query: {search_query[:100]}...")
+
+        # Get embedding for search query
+        query_embedding = get_openai_embedding(search_query)
+        logger.info(f"DEBUG: Got query embedding, dimension: {len(query_embedding)}")
+
+        # Calculate similarities for all sources
+        matches = []
+        for i, source in enumerate(loaded_sources):
+            if i % 20 == 0:  # Log progress every 20 documents
+                logger.info(f"DEBUG: Processing document {i+1}/{len(loaded_sources)}")
+
+            try:
+                # Get embedding for document text
+                doc_embedding = get_openai_embedding(source['text'])
+
+                # Calculate similarity
+                similarity = cosine_similarity(query_embedding, doc_embedding)
+
+                if similarity >= float(match_threshold):
+                    source_copy = source.copy()
+                    source_copy['match_score'] = similarity
+
+                    # Generate correct knowledge base URLs with proper document IDs
+                    if "Lennar" in source_copy['file_name']:
+                        doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+                    elif "Meritage" in source_copy['file_name']:
+                        doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
+                    else:
+                        doc_id = "unknown"
+                    source_copy['url'] = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={source_copy['chunk_index']}"
+
+                    matches.append(source_copy)
+                    logger.info(f"DEBUG: Found match with similarity {similarity:.3f}: {source_copy['file_name']} page {source_copy['chunk_index']}")
+
+            except Exception as e:
+                logger.warning(f"DEBUG: Failed to process document {i}: {e}")
+                continue
+
+        # Sort by similarity score (descending)
+        matches.sort(key=lambda x: x['match_score'], reverse=True)
+
+        # Select top matches respecting character limit
+        final_matches = []
+        chars_so_far = 0
+
+        for match in matches:
+            if len(final_matches) >= int(max_sources):
+                break
+
+            # Always include at least 2 documents if available, then respect character limit
+            if len(final_matches) >= 2 and chars_so_far + len(match['text']) > int(max_characters):
+                break
+
+            final_matches.append(match)
+            chars_so_far += len(match['text'])
+
+        logger.info(f"DEBUG: Selected {len(final_matches)} final matches with embeddings")
+        if final_matches:
+            logger.info(f"DEBUG: Top similarity scores: {[m['match_score'] for m in final_matches[:3]]}")
+
+        return final_matches
+
+    except Exception as e:
+        logger.error(f"ERROR: OpenAI embedding search failed: {e}")
+        import traceback
+        logger.error(f"ERROR: Full traceback: {traceback.format_exc()}")
+        raise e
 
 # HTML Templates
 

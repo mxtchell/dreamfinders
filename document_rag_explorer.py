@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
         SkillParameter(
             name="match_threshold",
             description="Minimum similarity score for document matching (0-1)",
-            default_value=0.3
+            default_value=0.15
         ),
         SkillParameter(
             name="max_characters",
@@ -82,7 +82,7 @@ def document_rag_explorer(parameters: SkillInput):
     user_question = parameters.arguments.user_question
     base_url = parameters.arguments.base_url
     max_sources = parameters.arguments.max_sources or 5
-    match_threshold = parameters.arguments.match_threshold or 0.2
+    match_threshold = parameters.arguments.match_threshold or 0.15  # Lower threshold for better recall
     max_characters = parameters.arguments.max_characters or 3000
     max_prompt = parameters.arguments.max_prompt
     
@@ -108,6 +108,7 @@ def document_rag_explorer(parameters: SkillInput):
             )
         
         # Find matching documents
+        logger.info(f"DEBUG: Searching for documents matching: '{user_question}'")
         docs = find_matching_documents(
             user_question=user_question,
             topics=list_of_topics,
@@ -117,9 +118,11 @@ def document_rag_explorer(parameters: SkillInput):
             match_threshold=match_threshold,
             max_characters=max_characters
         )
+        logger.info(f"DEBUG: Found {len(docs) if docs else 0} matching documents")
         
         if not docs:
             # No results found
+            logger.warning("DEBUG: No matching documents found for query")
             no_results_html = """
             <div style="text-align: center; padding: 40px; color: #666;">
                 <h2>No relevant documents found</h2>
@@ -132,7 +135,9 @@ def document_rag_explorer(parameters: SkillInput):
             title = "No Results Found"
         else:
             # Generate response from documents
+            logger.info(f"DEBUG: Generating RAG response from {len(docs)} documents")
             response_data = generate_rag_response(user_question, docs)
+            logger.info(f"DEBUG: Response generated: {bool(response_data)}")
             
             # Create main response HTML (without sources section)
             if response_data:
@@ -166,7 +171,9 @@ def document_rag_explorer(parameters: SkillInput):
                 title = "Error"
     
     except Exception as e:
-        logger.error(f"Error in document RAG: {str(e)}")
+        logger.error(f"ERROR in document RAG: {str(e)}")
+        import traceback
+        logger.error(f"ERROR: Full traceback:\n{traceback.format_exc()}")
         main_html = f"<p>Error processing request: {str(e)}</p>"
         sources_html = "<p>Error loading sources</p>"
         title = "Error"
@@ -491,136 +498,256 @@ def load_document_sources():
     return loaded_sources
 
 def find_matching_documents(user_question, topics, loaded_sources, base_url, max_sources, match_threshold, max_characters):
-    """Find documents matching the user question using embedding-based semantic matching"""
-    logger.info("DEBUG: Starting embedding-based document matching")
-    
+    """Find documents matching the user question using embeddings when available, fallback to keyword matching"""
+    logger.info("DEBUG: Starting document matching")
+    logger.info(f"DEBUG: User question: {user_question}")
+    logger.info(f"DEBUG: Topics: {topics}")
+    logger.info(f"DEBUG: Match threshold: {match_threshold}")
+    logger.info(f"DEBUG: Max sources: {max_sources}")
+
     try:
         import os
-        
+
         logger.info(f"DEBUG: Matching against {len(loaded_sources)} document sources")
-        
-        # Simple text-based matching since sp_tools is not available
-        matches = []
-        chars_so_far = 0
-        
-        # Combine all search terms
-        search_terms = []
-        if user_question:
-            search_terms.append(user_question)
-        search_terms.extend([topic for topic in topics if topic])
-        
-        # Processing search terms
-        
-        # Score ALL document sources first, then select best matches
-        scored_sources = []
-        
-        for source in loaded_sources:
-            score = calculate_simple_relevance(source['text'], search_terms)
-            
-            if score >= float(match_threshold):
-                source_copy = source.copy()
-                source_copy['match_score'] = score
-                source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
-                scored_sources.append(source_copy)
-        
-        # Sort by relevance score (descending)
-        scored_sources.sort(key=lambda x: x['match_score'], reverse=True)
-        
-        # Select top matches while respecting character limit
-        matches = []
-        chars_so_far = 0
-        
-        for source in scored_sources:
-            if len(matches) >= int(max_sources):
-                break
-            if chars_so_far + len(source['text']) > int(max_characters):
-                break
-                
-            matches.append(source)
-            chars_so_far += len(source['text'])
-        
-        # Search completed
+
+        # Try to use embeddings if available
+        try:
+            from sp_tools.embedding_match import EmbeddingMatchManager
+            logger.info("DEBUG: Using embedding-based matching")
+
+            # Create embedding manager for loaded sources
+            loaded_source_matcher = EmbeddingMatchManager(
+                None,  # llm_gateway would be passed here in skill context
+                "competitor_rag_skill",
+                [s["text"] for s in loaded_sources]
+            )
+
+            # Get matches using embeddings
+            matches_with_scores = []
+            if user_question:
+                logger.info(f"DEBUG: Embedding search for question: {user_question[:100]}")
+                question_matches = loaded_source_matcher.match(user_question, thresh=match_threshold, top_n=max_sources, with_scores=True)
+                logger.info(f"DEBUG: Found {len(question_matches)} matches for question")
+                matches_with_scores.extend(question_matches)
+
+            for topic in topics:
+                if topic:
+                    logger.info(f"DEBUG: Embedding search for topic: {topic[:100]}")
+                    topic_matches = loaded_source_matcher.match(topic, thresh=match_threshold, top_n=max_sources, with_scores=True)
+                    logger.info(f"DEBUG: Found {len(topic_matches)} matches for topic")
+                    matches_with_scores.extend(topic_matches)
+
+            # Sort by score and deduplicate
+            matches_with_scores = sorted(matches_with_scores, key=lambda x: x[1], reverse=True)
+            logger.info(f"DEBUG: Total embedding matches before dedup: {len(matches_with_scores)}")
+
+            # Find matching source documents
+            matches = []
+            chars_so_far = 0
+            seen_texts = set()
+
+            for match_text, score in matches_with_scores:
+                if len(matches) >= int(max_sources):
+                    break
+
+                # Find the source that matches this text
+                for source in loaded_sources:
+                    if source['text'] == match_text and source['text'] not in seen_texts:
+                        if chars_so_far + len(source['text']) > int(max_characters):
+                            if not matches:  # Include at least one
+                                source_copy = source.copy()
+                                source_copy['match_score'] = score
+                                source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                                matches.append(source_copy)
+                            break
+
+                        source_copy = source.copy()
+                        source_copy['match_score'] = score
+                        source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                        matches.append(source_copy)
+                        chars_so_far += len(source['text'])
+                        seen_texts.add(source['text'])
+                        break
+
+            logger.info(f"DEBUG: Found {len(matches)} matches using embeddings")
+            if matches:
+                logger.info(f"DEBUG: Top match score: {matches[0]['match_score']:.3f}")
+                logger.info(f"DEBUG: Top match file: {matches[0]['file_name']} page {matches[0]['chunk_index']}")
+
+        except ImportError as e:
+            logger.info(f"DEBUG: Embedding tools not available ({e}), falling back to keyword matching")
+
+            # Fallback to keyword-based matching
+            # Expand search terms with synonyms and related terms
+            search_terms = []
+            if user_question:
+                search_terms.append(user_question)
+
+                # Add domain-specific expansions based on question content
+                question_lower = user_question.lower()
+                if 'financing' in question_lower or 'mortgage' in question_lower:
+                    search_terms.extend(['apr', 'rate', 'buydown', 'payment', 'loan', 'interest'])
+                if 'special' in question_lower or 'promotion' in question_lower:
+                    search_terms.extend(['event', 'offer', 'sale', 'discount', 'incentive'])
+                if 'price' in question_lower or 'cost' in question_lower:
+                    search_terms.extend(['$', 'starting from', 'base price'])
+                if 'inventory' in question_lower or 'available' in question_lower:
+                    search_terms.extend(['move-in ready', 'quick move', 'homes available'])
+
+            search_terms.extend([topic for topic in topics if topic])
+
+            logger.info(f"DEBUG: Expanded search terms ({len(search_terms)} total): {search_terms[:5]}")
+
+            # Score ALL document sources first
+            scored_sources = []
+
+            for source in loaded_sources:
+                score = calculate_simple_relevance(source['text'], search_terms)
+
+                if score >= float(match_threshold):
+                    source_copy = source.copy()
+                    source_copy['match_score'] = score
+                    source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                    scored_sources.append(source_copy)
+
+            logger.info(f"DEBUG: Found {len(scored_sources)} sources above threshold {match_threshold}")
+            if scored_sources:
+                logger.info(f"DEBUG: Score range: {scored_sources[0]['match_score']:.3f} to {scored_sources[-1]['match_score']:.3f}")
+
+            # Sort by relevance score (descending)
+            scored_sources.sort(key=lambda x: x['match_score'], reverse=True)
+
+            # Select top matches while respecting character limit
+            matches = []
+            chars_so_far = 0
+
+            for source in scored_sources:
+                if len(matches) >= int(max_sources):
+                    break
+                if chars_so_far + len(source['text']) > int(max_characters):
+                    if not matches:
+                        matches.append(source)
+                    break
+
+                matches.append(source)
+                chars_so_far += len(source['text'])
+
+            # If no matches found with threshold, get at least top 2 documents
+            if not matches and loaded_sources:
+                logger.info("DEBUG: No matches above threshold, selecting top 2 documents")
+                all_scored = []
+                for source in loaded_sources[:50]:
+                    score = calculate_simple_relevance(source['text'], search_terms)
+                    source_copy = source.copy()
+                    source_copy['match_score'] = score
+                    source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                    all_scored.append(source_copy)
+
+                all_scored.sort(key=lambda x: x['match_score'], reverse=True)
+                matches = all_scored[:2]
+
+        logger.info(f"DEBUG: Selected {len(matches)} best matching documents")
         return [SimpleNamespace(**match) for match in matches]
-        
+
     except Exception as e:
-        logger.error(f"ERROR: Embedding matching failed: {e}")
+        logger.error(f"ERROR: Document matching failed: {e}")
         import traceback
         logger.error(f"ERROR: Full traceback: {traceback.format_exc()}")
         raise e
 
 def calculate_simple_relevance(text, search_terms):
-    """Clean, generic relevance scoring without hardcoded domain knowledge"""
+    """Enhanced relevance scoring for competitive intelligence documents"""
     text_lower = text.lower()
     score = 0.0
-    
-    # Removed excessive debugging
-    
+    debug_matches = []
+
+    # Domain-specific keywords for real estate competitive intelligence
+    financing_keywords = ['financing', 'mortgage', 'loan', 'apr', 'rate', 'payment', 'buydown', 'interest', 'closing cost', 'incentive', 'promotion', 'offer', 'special', 'event', 'sale', 'monthly payment']
+    pricing_keywords = ['price', 'pricing', 'cost', '$', 'from', 'starting', 'base', 'reduction', 'discount']
+    inventory_keywords = ['available', 'inventory', 'move-in ready', 'quick move', 'homes', 'communities', 'floor plan', 'model']
+    competitor_keywords = ['lennar', 'meritage', 'dr horton', 'pulte', 'kb home', 'taylor morrison']
+
+    # Check for domain-specific content first
+    for keyword in financing_keywords:
+        if keyword in text_lower:
+            score += 0.15
+            debug_matches.append(f"financing:{keyword}")
+
+    for keyword in pricing_keywords:
+        if keyword in text_lower:
+            score += 0.1
+            debug_matches.append(f"pricing:{keyword}")
+
+    for keyword in inventory_keywords:
+        if keyword in text_lower:
+            score += 0.08
+
+    for keyword in competitor_keywords:
+        if keyword in text_lower:
+            score += 0.2
+            debug_matches.append(f"competitor:{keyword}")
+
+    # Now check search terms with enhanced matching
     for term in search_terms:
         if not term:
             continue
-            
+
         term_lower = term.lower()
-        
+
         # Check for exact phrase matches first (highest priority)
         if term_lower in text_lower:
             occurrences = text_lower.count(term_lower)
-            phrase_score = min(occurrences * 0.8, 1.5)  # Strong boost for exact phrases
+            phrase_score = min(occurrences * 0.5, 1.0)  # Strong boost for exact phrases
             score += phrase_score
-            # Found exact phrase match
             continue
-        
+
         # Break down into individual words for partial matching
         term_words = term_lower.split()
         term_total_score = 0
         matched_words = 0
         total_words = len([w for w in term_words if len(w) >= 3])  # Count meaningful words
-        
+
         for word in term_words:
-            if len(word) < 3:  # Skip very short words (the, at, in, etc.)
+            if len(word) < 3:  # Skip very short words
                 continue
-                
+
+            # Check for partial matches and synonyms
             if word in text_lower:
                 matched_words += 1
                 occurrences = text_lower.count(word)
-                
-                # Dynamic scoring based on word characteristics
-                if len(word) >= 10:  # Very long words are highly specific
+
+                # Boost important domain words
+                if word in ['financing', 'mortgage', 'special', 'promotion', 'rate', 'payment', 'lennar', 'meritage', 'apr', 'buydown']:
                     base_score = 0.4
                 elif len(word) >= 7:  # Long words are usually specific
-                    base_score = 0.3
-                elif len(word) >= 5:  # Medium words
-                    base_score = 0.2
-                else:  # Short but meaningful words
+                    base_score = 0.25
+                else:
                     base_score = 0.15
-                
-                # Reduce score for extremely common words
-                if word in ['the', 'and', 'for', 'with', 'from', 'that', 'this', 'have', 'will', 'are']:
-                    base_score *= 0.3
-                
-                word_score = min(occurrences * base_score, 0.8)
+
+                word_score = min(occurrences * base_score, 0.6)
                 term_total_score += word_score
-                # Found word match
-        
+            # Also check for common variations
+            elif any(variation in text_lower for variation in [word + 's', word + 'ing', word + 'ed', word[:-1] if word.endswith('s') else word]):
+                matched_words += 1
+                term_total_score += 0.1
+
         # Boost score based on completeness of the search term match
         if total_words > 0:
             completeness_ratio = matched_words / total_words
-            if completeness_ratio >= 0.8:  # Most words found
-                completeness_bonus = 0.3
-            elif completeness_ratio >= 0.6:  # Many words found
-                completeness_bonus = 0.2
-            elif completeness_ratio >= 0.4:  # Some words found
-                completeness_bonus = 0.1
-            else:
-                completeness_bonus = 0
-            
-            if completeness_bonus > 0:
-                term_total_score += completeness_bonus
-                # Applied completeness bonus
-        
+            if completeness_ratio >= 0.7:  # Most words found
+                term_total_score *= 1.3
+            elif completeness_ratio >= 0.5:  # Many words found
+                term_total_score *= 1.1
+
         score += term_total_score
-    
-    final_score = min(score, 1.0)
-    # Final score calculated
+
+    # Normalize and ensure we don't over-score
+    final_score = min(score / 2.0, 1.0)  # Divide by 2 to normalize the increased scoring
+
+    # Debug logging for high-scoring matches
+    if final_score > 0.3 and debug_matches:
+        logger.debug(f"MATCH SCORE {final_score:.3f}: Found keywords: {debug_matches[:5]}")
+
     return final_score
 
 def generate_rag_response(user_question, docs):
@@ -630,6 +757,7 @@ def generate_rag_response(user_question, docs):
     
     # Build facts from documents for LLM prompt
     facts = []
+    logger.info(f"DEBUG: Building prompt from {len(docs)} documents")
     for i, doc in enumerate(docs):
         facts.append(f"====== Source {i+1} ====")
         facts.append(f"File and page: {doc.file_name} page {doc.chunk_index}")
@@ -637,6 +765,7 @@ def generate_rag_response(user_question, docs):
         facts.append(f"Citation: {doc.url}")
         facts.append(f"Content: {doc.text}")
         facts.append("")
+        logger.debug(f"DEBUG: Added source {i+1}: {doc.file_name} p{doc.chunk_index} ({len(doc.text)} chars)")
     
     # Create the prompt for the LLM
     prompt_template = Template(narrative_prompt)
@@ -644,6 +773,8 @@ def generate_rag_response(user_question, docs):
         user_query=user_question,
         facts="\n".join(facts)
     )
+    logger.info(f"DEBUG: Generated prompt length: {len(full_prompt)} chars")
+    logger.debug(f"DEBUG: Prompt preview: {full_prompt[:500]}...")
     
     try:
         # Use ArUtils for LLM calls like other skills do
@@ -652,7 +783,8 @@ def generate_rag_response(user_question, docs):
         ar_utils = ArUtils()
         llm_response = ar_utils.get_llm_response(full_prompt)
         
-        logger.info(f"DEBUG: Got LLM response: {llm_response[:100]}...")
+        logger.info(f"DEBUG: Got LLM response length: {len(llm_response)} chars")
+        logger.info(f"DEBUG: LLM response preview: {llm_response[:200]}...")
         
         # Parse the LLM response like the old doc_search code
         def get_between_tags(content, tag):
@@ -670,16 +802,35 @@ def generate_rag_response(user_question, docs):
         
     except Exception as e:
         logger.error(f"DEBUG: ArUtils LLM call failed: {e}")
-        # Fallback to a structured response
-        title = f"Analysis: {user_question}"
-        content = f"<p>Based on the available documents, here's what I found regarding: <strong>{user_question}</strong></p>"
+        logger.info(f"DEBUG: Using fallback response generation")
+        # Fallback with better extraction of actual content
+        title = f"Competitive Intelligence: {user_question}"
+        content = f"<p>Based on the competitive intelligence documents, here's the relevant information:</p>"
+
+        # Extract and present actual data from documents
         for i, doc in enumerate(docs):
             doc_text = str(doc.text) if doc.text else ""
             clean_text = doc_text.replace(f"START OF PAGE: {doc.chunk_index}", "").strip()
             clean_text = clean_text.replace(f"END OF PAGE: {doc.chunk_index}", "").strip()
+
             if clean_text and len(clean_text) > 20:
-                key_info = clean_text[:200] + "..." if len(clean_text) > 200 else clean_text
-                content += f"<p>{key_info}<sup>[{i+1}]</sup></p>"
+                # Extract specific data points like prices, rates, etc
+                lines = clean_text.split('\n')
+                relevant_lines = []
+
+                for line in lines:
+                    line_lower = line.lower()
+                    # Extract lines with important information
+                    if any(keyword in line_lower for keyword in ['$', 'price', 'apr', 'rate', 'payment', 'special', 'event', 'promotion', 'financing', 'mortgage', 'buydown', 'available', 'move-in']):
+                        relevant_lines.append(line.strip())
+
+                if relevant_lines:
+                    content += f"<h3>From {doc.file_name} (Page {doc.chunk_index})<sup>[{i+1}]</sup></h3>"
+                    content += "<ul>"
+                    for line in relevant_lines[:5]:  # Show top 5 most relevant lines
+                        if line:
+                            content += f"<li>{line}</li>"
+                    content += "</ul>"
     
     # Build references with actual URLs and thumbnails
     references = []
@@ -751,7 +902,17 @@ def force_ascii_replace(html_string):
 # HTML Templates
 
 narrative_prompt = """
-Answer the user's question based on the sources provided by writing a short headline between <title> tags then detail the supporting info for that answer in HTML between <content> tags.  The content should contain citation references like <sup>[source number]</sup> where appropriate.  Conclude with a list of the references in <reference> tags like the example.
+You are analyzing competitive intelligence documents for a home builder. Extract and summarize ALL relevant information from the provided sources to answer the user's question. Be comprehensive and specific.
+
+IMPORTANT INSTRUCTIONS:
+1. Extract SPECIFIC details like prices, rates, dates, promotions, and offers
+2. Include ALL relevant information found in the sources, not just general statements
+3. If the sources contain relevant data, ALWAYS provide it - never say "no specific information"
+4. For financing questions, look for APR rates, buydown offers, monthly payments, special events
+5. For pricing questions, extract specific home prices, price ranges, and any discounts
+6. For inventory questions, count available homes, list communities, and note move-in ready status
+
+Write a descriptive headline between <title> tags then detail ALL supporting information in HTML between <content> tags with citation references like <sup>[source number]</sup>.
 
 Base your summary solely on the provided facts, avoiding assumptions.
 

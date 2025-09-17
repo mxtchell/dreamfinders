@@ -541,49 +541,12 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
         raise e
 
 def calculate_simple_relevance(text, search_terms):
-    """Enhanced relevance scoring with company-specific matching to prevent cross-contamination"""
+    """Clean, generic relevance scoring without hardcoded domain knowledge"""
     text_lower = text.lower()
     score = 0.0
     
     logger.info(f"DEBUG: Calculating relevance for text snippet: '{text_lower[:100]}...'")
     logger.info(f"DEBUG: Search terms: {search_terms}")
-    
-    # Detect if this is a company-specific query
-    is_meritage_query = False
-    is_lennar_query = False
-    
-    for term in search_terms:
-        if term and 'meritage' in term.lower():
-            is_meritage_query = True
-        elif term and 'lennar' in term.lower():
-            is_lennar_query = True
-    
-    # Check document source - CRITICAL for preventing cross-contamination
-    is_meritage_doc = 'meritage' in text_lower
-    is_lennar_doc = 'lennar' in text_lower
-    
-    # Apply strict company filtering - if query is company-specific, only match that company's documents
-    if is_meritage_query and is_lennar_doc:
-        logger.info(f"DEBUG: COMPANY FILTER: Meritage query but Lennar document - REJECTED")
-        return 0.0
-    elif is_lennar_query and is_meritage_doc:
-        logger.info(f"DEBUG: COMPANY FILTER: Lennar query but Meritage document - REJECTED")
-        return 0.0
-    
-    # Key competitive intelligence terms that should boost relevance
-    competitive_keywords = {
-        'national sales event': 1.5,  # Exact phrase gets highest score
-        'sales event': 1.2,
-        'pricing': 0.6, 'price': 0.5, 'cost': 0.4, 'pricing strategy': 0.8,
-        'promotion': 0.6, 'promotional': 0.6, 'promo': 0.5, 'special offer': 0.8,
-        'financing': 0.6, 'finance': 0.5, 'rate': 0.4, 'interest': 0.4,
-        'event': 0.4, 'sale': 0.3,
-        'inventory': 0.6, 'available': 0.3,
-        'meritage': 1.0, 'lennar': 1.0, 'builder': 0.4,
-        'reduction': 0.8, 'reduced': 0.7, 'discount': 0.7,
-        'national': 0.5, 'limited time': 0.6, 'special': 0.4,
-        'homes': 0.1  # Reduced score for generic terms
-    }
     
     for term in search_terms:
         if not term:
@@ -594,7 +557,7 @@ def calculate_simple_relevance(text, search_terms):
         # Check for exact phrase matches first (highest priority)
         if term_lower in text_lower:
             occurrences = text_lower.count(term_lower)
-            phrase_score = min(occurrences * 1.0, 2.0)  # Boost for exact phrases
+            phrase_score = min(occurrences * 0.8, 1.5)  # Strong boost for exact phrases
             score += phrase_score
             logger.info(f"DEBUG: Found exact phrase '{term}' {occurrences} times, added {phrase_score} to score")
             continue
@@ -603,53 +566,51 @@ def calculate_simple_relevance(text, search_terms):
         term_words = term_lower.split()
         term_total_score = 0
         matched_words = 0
+        total_words = len([w for w in term_words if len(w) >= 3])  # Count meaningful words
         
         for word in term_words:
-            if len(word) < 3:  # Skip very short words
+            if len(word) < 3:  # Skip very short words (the, at, in, etc.)
                 continue
                 
             if word in text_lower:
                 matched_words += 1
                 occurrences = text_lower.count(word)
                 
-                # Check if it's a competitive intelligence keyword
-                if word in competitive_keywords:
-                    base_score = competitive_keywords[word]
-                    logger.info(f"DEBUG: Found competitive keyword '{word}' with boosted score {base_score}")
-                elif len(word) > 8:  # Long words are usually more specific
+                # Dynamic scoring based on word characteristics
+                if len(word) >= 10:  # Very long words are highly specific
+                    base_score = 0.4
+                elif len(word) >= 7:  # Long words are usually specific
                     base_score = 0.3
-                elif len(word) > 5:
+                elif len(word) >= 5:  # Medium words
                     base_score = 0.2
-                else:
-                    base_score = 0.1  # Lower base score for generic words
+                else:  # Short but meaningful words
+                    base_score = 0.15
+                
+                # Reduce score for extremely common words
+                if word in ['the', 'and', 'for', 'with', 'from', 'that', 'this', 'have', 'will', 'are']:
+                    base_score *= 0.3
                 
                 word_score = min(occurrences * base_score, 0.8)
                 term_total_score += word_score
                 logger.info(f"DEBUG: Found word '{word}' {occurrences} times, added {word_score} to score")
         
-        # Boost score if multiple words from the search term are found
-        if matched_words > 1:
-            completeness_bonus = matched_words * 0.1
-            term_total_score += completeness_bonus
-            logger.info(f"DEBUG: Completeness bonus for {matched_words} matched words: {completeness_bonus}")
-        
-        # Check for multi-word competitive phrases
-        for phrase, boost in competitive_keywords.items():
-            if ' ' in phrase and phrase in text_lower:
-                phrase_occurrences = text_lower.count(phrase)
-                phrase_boost = min(phrase_occurrences * boost, 1.5)
-                term_total_score += phrase_boost
-                logger.info(f"DEBUG: Found competitive phrase '{phrase}' {phrase_occurrences} times, added {phrase_boost} boost")
+        # Boost score based on completeness of the search term match
+        if total_words > 0:
+            completeness_ratio = matched_words / total_words
+            if completeness_ratio >= 0.8:  # Most words found
+                completeness_bonus = 0.3
+            elif completeness_ratio >= 0.6:  # Many words found
+                completeness_bonus = 0.2
+            elif completeness_ratio >= 0.4:  # Some words found
+                completeness_bonus = 0.1
+            else:
+                completeness_bonus = 0
+            
+            if completeness_bonus > 0:
+                term_total_score += completeness_bonus
+                logger.info(f"DEBUG: Completeness bonus ({completeness_ratio:.1%} match): {completeness_bonus}")
         
         score += term_total_score
-    
-    # Apply strong company-specific bonuses for correct matches
-    if is_meritage_query and is_meritage_doc:
-        score *= 1.5
-        logger.info(f"DEBUG: Applied strong Meritage match bonus (1.5x)")
-    elif is_lennar_query and is_lennar_doc:
-        score *= 1.5
-        logger.info(f"DEBUG: Applied strong Lennar match bonus (1.5x)")
     
     final_score = min(score, 1.0)
     logger.info(f"DEBUG: Final relevance score: {final_score}")
@@ -727,22 +688,16 @@ def generate_rag_response(user_question, docs):
         logger.info(f"DEBUG: Generating thumbnail for reference {i+1}: {doc.file_name} page {doc.chunk_index}")
         thumbnail_base64 = get_pdf_thumbnail(pack_file_path, doc.file_name, doc.chunk_index, 120, 160)
         
-        # Use hardcoded file IDs since API not available - you provided these IDs
-        logger.info(f"DEBUG URL: ==> Using provided file IDs for URL generation: {doc.file_name}")
-        base_url = "https://dreamfinders.poc.answerrocket.com"
+        # Generate generic knowledge base URLs
+        logger.info(f"DEBUG URL: ==> Generating URL for: {doc.file_name}")
+        base_url = "https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base"
         
-        # Map file names to the specific IDs you provided
-        file_id_map = {
-            "New Homes for Sale _ Lennar.pdf": "abb40c5f-f259-48bf-85c3-d2ed1ea956b8",
-            "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf": "7f0292db-d935-4c90-b65b-897bb98167f9"
-        }
-        
-        if doc.file_name in file_id_map:
-            file_id = file_id_map[doc.file_name]
-            doc.url = f"{base_url}/apps/chat/knowledge-base/{file_id}#page={doc.chunk_index}"
-            logger.info(f"DEBUG URL: ==> Updated URL with mapped file ID: {doc.url}")
+        # Use the existing URL or generate a generic one
+        if not hasattr(doc, 'url') or not doc.url:
+            doc.url = f"{base_url}/{doc.file_name}#page={doc.chunk_index}"
+            logger.info(f"DEBUG URL: ==> Generated generic URL: {doc.url}")
         else:
-            logger.warning(f"DEBUG URL: ==> No file ID mapping found for {doc.file_name}, using default URL")
+            logger.info(f"DEBUG URL: ==> Using existing URL: {doc.url}")
         
         ref = {
             'number': i + 1,

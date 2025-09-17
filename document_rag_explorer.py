@@ -956,10 +956,18 @@ def get_openai_embedding(text: str) -> List[float]:
         import openai
         import os
 
-        # Get API key from environment
-        api_key = os.environ.get('OPENAI_API_KEY')
+        # Get API key from environment - check multiple possible key names
+        api_key = (os.environ.get('OPENAI_API_KEY') or
+                  os.environ.get('EMBEDDING_API_KEY') or
+                  os.environ.get('AR_OPENAI_API_KEY') or
+                  os.environ.get('LLM_API_KEY') or
+                  os.environ.get('OPENAI_KEY'))
+
         if not api_key:
-            raise ValueError("No OpenAI API key found")
+            # Log all environment variables that contain 'API' or 'KEY' to help debug
+            env_keys = [k for k in os.environ.keys() if 'API' in k.upper() or 'KEY' in k.upper()]
+            logger.info(f"DEBUG: Available API/KEY env vars: {env_keys}")
+            raise ValueError("No OpenAI API key found in environment")
 
         openai.api_key = api_key
 

@@ -943,43 +943,76 @@ def force_ascii_replace(html_string):
 # OpenAI Embedding Functions
 
 def get_openai_embedding(text: str) -> List[float]:
-    """Get OpenAI embedding for a text string"""
+    """Get OpenAI embedding using the platform's embedding service"""
     try:
         from ar_analytics import ArUtils
         ar_utils = ArUtils()
 
-        # Check if ArUtils has embedding method
-        if hasattr(ar_utils, 'get_embedding'):
-            return ar_utils.get_embedding(text)
+        # Try different possible embedding methods on ArUtils
+        embedding_methods = ['get_embedding', 'get_embeddings', 'embed_text', 'embedding']
 
-        # Otherwise use OpenAI API directly
-        import openai
+        for method_name in embedding_methods:
+            if hasattr(ar_utils, method_name):
+                logger.info(f"DEBUG: Found ArUtils embedding method: {method_name}")
+                method = getattr(ar_utils, method_name)
+                try:
+                    result = method(text)
+                    if isinstance(result, list) and len(result) > 0:
+                        logger.info(f"DEBUG: Got embedding from ArUtils.{method_name}, dimension: {len(result)}")
+                        return result
+                except Exception as e:
+                    logger.warning(f"DEBUG: ArUtils.{method_name} failed: {e}")
+                    continue
+
+        # Try platform-specific embedding APIs
+        logger.info("DEBUG: Trying platform embedding service directly")
+
+        # Try using requests to call the platform's embedding endpoint
+        import requests
         import os
 
-        # Get API key from environment - check multiple possible key names
-        api_key = (os.environ.get('OPENAI_API_KEY') or
-                  os.environ.get('EMBEDDING_API_KEY') or
-                  os.environ.get('AR_OPENAI_API_KEY') or
-                  os.environ.get('LLM_API_KEY') or
-                  os.environ.get('OPENAI_KEY'))
+        # Get the base URL from environment
+        base_url = os.environ.get("AR_BACKEND_BASE_URL", "http://localhost:8080")
+        embedding_url = f"{base_url}/api/embeddings"
 
-        if not api_key:
-            # Log all environment variables that contain 'API' or 'KEY' to help debug
-            env_keys = [k for k in os.environ.keys() if 'API' in k.upper() or 'KEY' in k.upper()]
-            logger.info(f"DEBUG: Available API/KEY env vars: {env_keys}")
-            raise ValueError("No OpenAI API key found in environment")
+        # Try to get tenant info for proper authentication
+        tenant = os.environ.get('AR_TENANT_ID', 'dreamfinders')
 
-        openai.api_key = api_key
+        headers = {
+            'Content-Type': 'application/json',
+            'Tenant': tenant,
+            'Max-Authorization': 'Max-Internal'
+        }
 
-        response = openai.Embedding.create(
-            model="text-embedding-ada-002",
-            input=text.replace("\n", " ")
-        )
+        payload = {
+            'text': text.replace("\n", " "),
+            'model': 'text-embedding-ada-002'
+        }
 
-        return response['data'][0]['embedding']
+        logger.info(f"DEBUG: Calling platform embedding API: {embedding_url}")
+        response = requests.post(embedding_url, json=payload, headers=headers, timeout=30)
+
+        if response.status_code == 200:
+            result = response.json()
+            if 'embedding' in result:
+                embedding = result['embedding']
+                logger.info(f"DEBUG: Got embedding from platform API, dimension: {len(embedding)}")
+                return embedding
+            elif 'data' in result and len(result['data']) > 0:
+                embedding = result['data'][0]['embedding']
+                logger.info(f"DEBUG: Got embedding from platform API (data format), dimension: {len(embedding)}")
+                return embedding
+        else:
+            logger.warning(f"DEBUG: Platform embedding API returned {response.status_code}: {response.text}")
+
+        # Log available ArUtils methods for debugging
+        ar_utils_methods = [method for method in dir(ar_utils) if not method.startswith('_')]
+        logger.info(f"DEBUG: Available ArUtils methods: {ar_utils_methods[:10]}...")
+
+        raise ValueError("No embedding method found on ArUtils or platform API")
 
     except Exception as e:
-        logger.error(f"ERROR: Failed to get OpenAI embedding: {e}")
+        logger.error(f"ERROR: Failed to get embedding: {e}")
         raise e
 
 def cosine_similarity(a: List[float], b: List[float]) -> float:

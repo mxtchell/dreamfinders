@@ -512,15 +512,15 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
 
         # Try to use embeddings if available
         try:
-            # Check what embedding environment variables are available
-            import os
-            embedding_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('EMBEDDING_API_KEY')
-            logger.info(f"DEBUG: Embedding key available: {bool(embedding_key)}")
+            from sp_tools.embedding_match import EmbeddingMatchManager
+            logger.info("DEBUG: Using embedding-based matching")
 
-            if embedding_key:
-                logger.info("DEBUG: Using OpenAI embeddings directly")
-                # For now, fall back to keyword matching but log that embeddings are possible
-                raise ImportError("Embeddings available but not implemented yet")
+            # Create embedding manager for loaded sources
+            loaded_source_matcher = EmbeddingMatchManager(
+                None,  # llm_gateway would be passed here in skill context
+                "competitor_rag_skill",
+                [s["text"] for s in loaded_sources]
+            )
 
             # Get matches using embeddings
             matches_with_scores = []

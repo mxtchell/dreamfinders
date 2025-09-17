@@ -557,13 +557,27 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
                             if not matches:  # Include at least one
                                 source_copy = source.copy()
                                 source_copy['match_score'] = score
-                                source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                                # Generate correct knowledge base URLs with proper document IDs
+                                if "Lennar" in source_copy['file_name']:
+                                    doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+                                elif "Meritage" in source_copy['file_name']:
+                                    doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
+                                else:
+                                    doc_id = "unknown"
+                                source_copy['url'] = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={source_copy['chunk_index']}"
                                 matches.append(source_copy)
                             break
 
                         source_copy = source.copy()
                         source_copy['match_score'] = score
-                        source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                        # Generate correct knowledge base URLs with proper document IDs
+                        if "Lennar" in source_copy['file_name']:
+                            doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+                        elif "Meritage" in source_copy['file_name']:
+                            doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
+                        else:
+                            doc_id = "unknown"
+                        source_copy['url'] = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={source_copy['chunk_index']}"
                         matches.append(source_copy)
                         chars_so_far += len(source['text'])
                         seen_texts.add(source['text'])
@@ -607,7 +621,14 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
                 if score >= float(match_threshold):
                     source_copy = source.copy()
                     source_copy['match_score'] = score
-                    source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                    # Generate correct knowledge base URLs with proper document IDs
+                    if "Lennar" in source_copy['file_name']:
+                        doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+                    elif "Meritage" in source_copy['file_name']:
+                        doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
+                    else:
+                        doc_id = "unknown"
+                    source_copy['url'] = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={source_copy['chunk_index']}"
                     scored_sources.append(source_copy)
 
             logger.info(f"DEBUG: Found {len(scored_sources)} sources above threshold {match_threshold}")
@@ -640,7 +661,14 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
                     score = calculate_simple_relevance(source['text'], search_terms)
                     source_copy = source.copy()
                     source_copy['match_score'] = score
-                    source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
+                    # Generate correct knowledge base URLs with proper document IDs
+                    if "Lennar" in source_copy['file_name']:
+                        doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+                    elif "Meritage" in source_copy['file_name']:
+                        doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
+                    else:
+                        doc_id = "unknown"
+                    source_copy['url'] = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={source_copy['chunk_index']}"
                     all_scored.append(source_copy)
 
                 all_scored.sort(key=lambda x: x['match_score'], reverse=True)
@@ -846,16 +874,20 @@ def generate_rag_response(user_question, docs):
         logger.info(f"DEBUG: Generating thumbnail for reference {i+1}: {doc.file_name} page {doc.chunk_index}")
         thumbnail_base64 = get_pdf_thumbnail(pack_file_path, doc.file_name, doc.chunk_index, 120, 160)
         
-        # Generate generic knowledge base URLs
+        # Generate correct knowledge base URLs with proper document IDs
         logger.info(f"DEBUG URL: ==> Generating URL for: {doc.file_name}")
-        base_url = "https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base"
-        
-        # Use the existing URL or generate a generic one
-        if not hasattr(doc, 'url') or not doc.url:
-            doc.url = f"{base_url}/{doc.file_name}#page={doc.chunk_index}"
-            logger.info(f"DEBUG URL: ==> Generated generic URL: {doc.url}")
+
+        # Map file names to their actual knowledge base IDs
+        if "Lennar" in doc.file_name:
+            doc_id = "abb40c5f-f259-48bf-85c3-d2ed1ea956b8"
+        elif "Meritage" in doc.file_name:
+            doc_id = "7f0292db-d935-4c90-b65b-897bb98167f9"
         else:
-            logger.info(f"DEBUG URL: ==> Using existing URL: {doc.url}")
+            # Fallback for unknown documents
+            doc_id = "unknown"
+
+        doc.url = f"https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base/{doc_id}#page={doc.chunk_index}"
+        logger.info(f"DEBUG URL: ==> Generated URL: {doc.url}")
         
         ref = {
             'number': i + 1,

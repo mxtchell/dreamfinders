@@ -23,10 +23,10 @@ import html
 logger = logging.getLogger(__name__)
 
 @skill(
-    name="Document RAG Explorer",
-    description="Retrieves and analyzes relevant documents from knowledge base to answer user questions",
-    capabilities="Searches through uploaded documents, finds relevant passages, generates comprehensive answers with citations, and provides source visualizations",
-    limitations="Limited to documents in the knowledge base, requires pre-processed document chunks in pack.json",
+    name="Competitor RAG Scraper",
+    description="Retrieves and analyzes competitive intelligence data to answer questions about competitor pricing, inventory, and market trends",
+    capabilities="Searches through competitive data documents (Lennar, Meritage), finds relevant home pricing and market intelligence, generates comprehensive answers with citations and PDF thumbnails",
+    limitations="Limited to documents in the knowledge base, requires pre-processed competitive data chunks in pack.json",
     parameters=[
         SkillParameter(
             name="user_question",

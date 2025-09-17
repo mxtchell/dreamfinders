@@ -509,29 +509,37 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
             search_terms.append(user_question)
         search_terms.extend([topic for topic in topics if topic])
         
-        logger.info(f"DEBUG: Searching for {len(search_terms)} search terms")
+        # Processing search terms
         
-        # Score each document source
+        # Score ALL document sources first, then select best matches
+        scored_sources = []
+        
         for source in loaded_sources:
-            if len(matches) >= int(max_sources) or chars_so_far >= int(max_characters):
-                break
-            
-            # Calculate relevance score
             score = calculate_simple_relevance(source['text'], search_terms)
             
             if score >= float(match_threshold):
                 source_copy = source.copy()
                 source_copy['match_score'] = score
                 source_copy['url'] = f"{base_url.rstrip('/')}/{source_copy['file_name']}#page={source_copy['chunk_index']}"
-                matches.append(source_copy)
-                chars_so_far += len(source_copy['text'])
-                logger.info(f"DEBUG: Added match with score {score}: {source_copy['file_name']} page {source_copy['chunk_index']}")
+                scored_sources.append(source_copy)
         
         # Sort by relevance score (descending)
-        matches.sort(key=lambda x: x['match_score'], reverse=True)
-        matches = matches[:int(max_sources)]
+        scored_sources.sort(key=lambda x: x['match_score'], reverse=True)
         
-        logger.info(f"DEBUG: Final matches: {len(matches)}")
+        # Select top matches while respecting character limit
+        matches = []
+        chars_so_far = 0
+        
+        for source in scored_sources:
+            if len(matches) >= int(max_sources):
+                break
+            if chars_so_far + len(source['text']) > int(max_characters):
+                break
+                
+            matches.append(source)
+            chars_so_far += len(source['text'])
+        
+        # Search completed
         return [SimpleNamespace(**match) for match in matches]
         
     except Exception as e:
@@ -545,8 +553,7 @@ def calculate_simple_relevance(text, search_terms):
     text_lower = text.lower()
     score = 0.0
     
-    logger.info(f"DEBUG: Calculating relevance for text snippet: '{text_lower[:100]}...'")
-    logger.info(f"DEBUG: Search terms: {search_terms}")
+    # Removed excessive debugging
     
     for term in search_terms:
         if not term:
@@ -559,7 +566,7 @@ def calculate_simple_relevance(text, search_terms):
             occurrences = text_lower.count(term_lower)
             phrase_score = min(occurrences * 0.8, 1.5)  # Strong boost for exact phrases
             score += phrase_score
-            logger.info(f"DEBUG: Found exact phrase '{term}' {occurrences} times, added {phrase_score} to score")
+            # Found exact phrase match
             continue
         
         # Break down into individual words for partial matching
@@ -592,7 +599,7 @@ def calculate_simple_relevance(text, search_terms):
                 
                 word_score = min(occurrences * base_score, 0.8)
                 term_total_score += word_score
-                logger.info(f"DEBUG: Found word '{word}' {occurrences} times, added {word_score} to score")
+                # Found word match
         
         # Boost score based on completeness of the search term match
         if total_words > 0:
@@ -608,12 +615,12 @@ def calculate_simple_relevance(text, search_terms):
             
             if completeness_bonus > 0:
                 term_total_score += completeness_bonus
-                logger.info(f"DEBUG: Completeness bonus ({completeness_ratio:.1%} match): {completeness_bonus}")
+                # Applied completeness bonus
         
         score += term_total_score
     
     final_score = min(score, 1.0)
-    logger.info(f"DEBUG: Final relevance score: {final_score}")
+    # Final score calculated
     return final_score
 
 def generate_rag_response(user_question, docs):

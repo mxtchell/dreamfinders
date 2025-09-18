@@ -584,16 +584,50 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
         # Sort by score
         scored_sources.sort(key=lambda x: x['match_score'], reverse=True)
 
-        # Intelligent source selection
+        # Intelligent source selection - prioritize company mentioned in question
         matches = []
         chars_so_far = 0
         has_lennar = False
         has_meritage = False
 
-        # First pass: get best matches
+        # If asking about specific company, prioritize those documents first
+        company_specific = mentions_lennar and not mentions_meritage  # Only Lennar
+        company_specific_meritage = mentions_meritage and not mentions_lennar  # Only Meritage
+
+        # First pass: prioritize company-specific documents if asking about one company
+        if company_specific:
+            logger.info("DEBUG: Prioritizing Lennar documents for company-specific question")
+            # Add Lennar documents first
+            for source in scored_sources:
+                if len(matches) >= int(max_sources):
+                    break
+                if "Lennar" in source['file_name']:
+                    if len(matches) >= 2 and chars_so_far + len(source['text']) > int(max_characters):
+                        break
+                    matches.append(source)
+                    chars_so_far += len(source['text'])
+                    has_lennar = True
+        elif company_specific_meritage:
+            logger.info("DEBUG: Prioritizing Meritage documents for company-specific question")
+            # Add Meritage documents first
+            for source in scored_sources:
+                if len(matches) >= int(max_sources):
+                    break
+                if "Meritage" in source['file_name']:
+                    if len(matches) >= 2 and chars_so_far + len(source['text']) > int(max_characters):
+                        break
+                    matches.append(source)
+                    chars_so_far += len(source['text'])
+                    has_meritage = True
+
+        # Second pass: fill remaining slots with best matches regardless of company
         for source in scored_sources:
             if len(matches) >= int(max_sources):
                 break
+
+            # Skip if already added
+            if source in matches:
+                continue
 
             # Check character limit (but ensure minimum docs)
             if len(matches) >= 2 and chars_so_far + len(source['text']) > int(max_characters):
@@ -608,7 +642,7 @@ def find_matching_documents(user_question, topics, loaded_sources, base_url, max
             matches.append(source)
             chars_so_far += len(source['text'])
 
-        # Second pass: ensure both companies if comparing
+        # Third pass: ensure both companies if comparing
         if (wants_comparison or mentions_both) and len(matches) < int(max_sources):
             if not has_lennar:
                 for source in scored_sources:

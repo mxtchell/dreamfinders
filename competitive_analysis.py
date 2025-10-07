@@ -365,9 +365,16 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     </div>
     """
 
+    # Create simple HTML layout
+    layout_html = f"""
+    <div style="width: 100%; height: 100%; overflow-y: auto;">
+        {dashboard_html}
+    </div>
+    """
+
     return SkillVisualization(
         title="Competitive Analysis Dashboard",
-        data=dashboard_html
+        layout=layout_html
     )
 
 

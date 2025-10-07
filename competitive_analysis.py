@@ -14,6 +14,7 @@ from collections import defaultdict
 
 from skill_framework import SkillInput, SkillVisualization, skill, SkillParameter, SkillOutput
 from skill_framework.layouts import wire_layout
+from competitive_layouts import competitive_dashboard_layout
 
 # List of target competitors
 COMPETITORS = ["lennar", "meritage", "dr horton", "pulte", "dreamfinders", "dream finders"]
@@ -327,50 +328,43 @@ def parse_dollar_amount(amount_str: str) -> float:
 
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
     """
-    Create badass dashboard visualization with HTML
+    Create badass dashboard visualization using wire_layout
     """
+    print(f"DEBUG: Creating dashboard visualization")
 
     # Build HTML for special financing cards
     financing_cards_html = create_financing_cards(data["financing"])
+    print(f"DEBUG: Financing cards HTML length: {len(financing_cards_html)}")
 
     # Build comparison table
     comparison_table_html = create_comparison_table(data)
+    print(f"DEBUG: Comparison table HTML length: {len(comparison_table_html)}")
 
     # Build inventory stats
     inventory_stats_html = create_inventory_stats(data["inventory"])
+    print(f"DEBUG: Inventory stats HTML length: {len(inventory_stats_html)}")
 
-    # Combine into single HTML dashboard (no wire_layout needed)
-    dashboard_html = f"""
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #f5f7fa; margin: -20px; padding: 0;">
-        <!-- Header Section with Gradient -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; color: white;">
-            <h1 style="margin: 0 0 10px 0; font-size: 32px; font-weight: 700;">🏘️ Competitive Intelligence Dashboard</h1>
-            <p style="margin: 0; font-size: 16px; opacity: 0.9;">Real-time analysis of Atlanta homebuilder market</p>
-        </div>
+    # Create variables dict for wire_layout
+    variables = {
+        "financing_cards_html": financing_cards_html,
+        "comparison_table_html": comparison_table_html,
+        "inventory_stats_html": inventory_stats_html
+    }
 
-        <!-- Special Financing Cards Section -->
-        <div style="padding: 40px;">
-            <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #2D3748;">💰 Current Special Financing Offers</h2>
-            {financing_cards_html}
-        </div>
+    print(f"DEBUG: Variables keys: {list(variables.keys())}")
 
-        <!-- Comparison Table Section -->
-        <div style="padding: 0 40px 40px 40px;">
-            <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #2D3748;">📋 Builder Comparison Matrix</h2>
-            {comparison_table_html}
-        </div>
+    # Parse layout JSON
+    import json
+    layout_dict = json.loads(competitive_dashboard_layout)
+    print(f"DEBUG: Layout parsed successfully")
 
-        <!-- Inventory Stats Cards -->
-        <div style="padding: 0 40px 40px 40px;">
-            <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #2D3748;">🏠 Inventory Breakdown</h2>
-            {inventory_stats_html}
-        </div>
-    </div>
-    """
+    # Render using wire_layout
+    rendered = wire_layout(layout_dict, variables)
+    print(f"DEBUG: Layout rendered successfully, type: {type(rendered)}")
 
     return SkillVisualization(
         title="Competitive Analysis",
-        layout=dashboard_html
+        layout=rendered
     )
 
 

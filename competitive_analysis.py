@@ -5,30 +5,24 @@ Analyzes competitor data (Lennar, Meritage, DR Horton, Pulte) to provide
 executive-level insights on special financing, inventory, and pricing.
 """
 
+from __future__ import annotations
+from types import SimpleNamespace
+from typing import List, Optional, Dict, Any
 import json
 import re
-from typing import Dict, List, Any, Optional
 from collections import defaultdict
 
-from answerrocket_client import AnswerRocketClient
-from sp_tools import (
-    skill,
-    SkillParameter,
-    SkillInput,
-    SkillOutput,
-    SkillVisualization,
-    wire_layout
-)
-
-# Initialize AnswerRocket client
-client = AnswerRocketClient()
+from skill_framework import SkillInput, SkillVisualization, skill, SkillParameter, SkillOutput
+from skill_framework.layouts import wire_layout
 
 # List of target competitors
 COMPETITORS = ["lennar", "meritage", "dr horton", "pulte", "dreamfinders", "dream finders"]
 
 @skill(
-    skill_name="competitive_analysis",
+    name="Competitive Analysis",
     description="Analyze competitor data on special financing, inventory, and pricing for Dream Finders Homes executive insights",
+    capabilities="Extracts and analyzes competitor special financing rates, inventory counts, pricing data from Lennar, Meritage, DR Horton, and Pulte. Generates executive dashboard with comparison tables and insights.",
+    limitations="Limited to data available in pack.json knowledge base",
     parameters=[
         SkillParameter(
             name="builder_names",
@@ -554,17 +548,4 @@ def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_ty
     return narrative
 
 
-if __name__ == "__main__":
-    # Test the skill
-    from sp_tools import SkillInput, SkillParameter
-
-    test_input = SkillInput(
-        arguments=type('obj', (object,), {
-            'builder_names': 'Lennar, Meritage, Dream Finders',
-            'analysis_type': 'all',
-            'region': 'Atlanta'
-        })
-    )
-
-    result = competitive_analysis(test_input)
-    print(result.final_prompt)
+# Test code removed - deploy to platform to use

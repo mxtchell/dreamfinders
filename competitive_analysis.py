@@ -366,9 +366,8 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     """
 
     return SkillVisualization(
-        visualization_type="html",
-        data=dashboard_html,
-        layout=wire_layout(width=12, height=600)
+        title="Competitive Analysis Dashboard",
+        data=dashboard_html
     )
 
 

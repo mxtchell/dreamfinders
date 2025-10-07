@@ -327,7 +327,7 @@ def parse_dollar_amount(amount_str: str) -> float:
 
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
     """
-    Create badass dashboard visualization with multiple components
+    Create badass dashboard visualization with Highcharts and custom HTML components
     """
 
     # Build HTML for special financing cards
@@ -339,43 +339,242 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     # Build inventory stats
     inventory_stats_html = create_inventory_stats(data["inventory"])
 
-    # Combine into dashboard layout
-    dashboard_html = f"""
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 16px; color: white;">
-        <h1 style="margin: 0 0 10px 0; font-size: 32px; font-weight: 700;">🏘️ Competitive Intelligence Dashboard</h1>
-        <p style="margin: 0 0 40px 0; font-size: 16px; opacity: 0.9;">Real-time analysis of Atlanta homebuilder market</p>
+    # Create inventory chart data
+    inventory_chart = create_inventory_chart(data["inventory"])
 
-        <!-- Special Financing Cards -->
-        <div style="margin-bottom: 40px;">
-            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">💰 Current Special Financing Offers</h2>
-            {financing_cards_html}
-        </div>
+    # Combine into dashboard layout using layoutJson like forecast skill
+    layout = {
+        "layoutJson": {
+            "type": "Document",
+            "style": {
+                "backgroundColor": "#f5f7fa",
+                "padding": "0px",
+                "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+            },
+            "children": [
+                # Header Section with Gradient
+                {
+                    "type": "Container",
+                    "style": {
+                        "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "padding": "40px",
+                        "borderRadius": "0px",
+                        "color": "white",
+                        "marginBottom": "30px"
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "text": "🏘️ Competitive Intelligence Dashboard",
+                            "style": {
+                                "fontSize": "32px",
+                                "fontWeight": "700",
+                                "marginBottom": "10px"
+                            }
+                        },
+                        {
+                            "type": "Text",
+                            "text": "Real-time analysis of Atlanta homebuilder market",
+                            "style": {
+                                "fontSize": "16px",
+                                "opacity": "0.9"
+                            }
+                        }
+                    ]
+                },
 
-        <!-- Comparison Table -->
-        <div style="margin-bottom: 40px;">
-            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">📊 Builder Comparison</h2>
-            {comparison_table_html}
-        </div>
+                # Special Financing Cards Section
+                {
+                    "type": "Container",
+                    "style": {
+                        "padding": "0 40px 40px 40px"
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "text": "💰 Current Special Financing Offers",
+                            "style": {
+                                "fontSize": "24px",
+                                "fontWeight": "600",
+                                "marginBottom": "20px",
+                                "color": "#2D3748"
+                            }
+                        },
+                        {
+                            "type": "HTML",
+                            "html": financing_cards_html
+                        }
+                    ]
+                },
 
-        <!-- Inventory Stats -->
-        <div>
-            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">🏠 Inventory Overview</h2>
-            {inventory_stats_html}
-        </div>
-    </div>
-    """
+                # Inventory Chart
+                {
+                    "type": "Container",
+                    "style": {
+                        "padding": "0 40px 40px 40px"
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "text": "📊 Inventory Comparison",
+                            "style": {
+                                "fontSize": "24px",
+                                "fontWeight": "600",
+                                "marginBottom": "20px",
+                                "color": "#2D3748"
+                            }
+                        },
+                        {
+                            "type": "HighchartsChart",
+                            "options": inventory_chart
+                        }
+                    ]
+                },
 
-    # Create simple HTML layout
-    layout_html = f"""
-    <div style="width: 100%; height: 100%; overflow-y: auto;">
-        {dashboard_html}
-    </div>
-    """
+                # Comparison Table Section
+                {
+                    "type": "Container",
+                    "style": {
+                        "padding": "0 40px 40px 40px"
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "text": "📋 Builder Comparison Matrix",
+                            "style": {
+                                "fontSize": "24px",
+                                "fontWeight": "600",
+                                "marginBottom": "20px",
+                                "color": "#2D3748"
+                            }
+                        },
+                        {
+                            "type": "HTML",
+                            "html": comparison_table_html
+                        }
+                    ]
+                },
+
+                # Inventory Stats Cards
+                {
+                    "type": "Container",
+                    "style": {
+                        "padding": "0 40px 40px 40px"
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "text": "🏠 Inventory Breakdown",
+                            "style": {
+                                "fontSize": "24px",
+                                "fontWeight": "600",
+                                "marginBottom": "20px",
+                                "color": "#2D3748"
+                            }
+                        },
+                        {
+                            "type": "HTML",
+                            "html": inventory_stats_html
+                        }
+                    ]
+                }
+            ]
+        },
+        "inputVariables": []
+    }
+
+    rendered = wire_layout(layout, {})
 
     return SkillVisualization(
-        title="Competitive Analysis Dashboard",
-        layout=layout_html
+        title="Competitive Analysis",
+        layout=rendered
     )
+
+
+def create_inventory_chart(inventory_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Create Highcharts column chart for inventory comparison
+    """
+    builders = list(inventory_data.keys())
+    total_homes = []
+    move_in_ready = []
+    under_construction = []
+
+    for builder in builders:
+        inv = inventory_data[builder]
+        total_homes.append(inv.get("total_homes", 0))
+        move_in_ready.append(inv.get("move_in_ready", 0))
+        under_construction.append(inv.get("under_construction", 0))
+
+    # Format builder names for display
+    builder_names = [b.replace("dreamfinders", "Dream Finders").title() for b in builders]
+
+    chart_config = {
+        "chart": {
+            "type": "column",
+            "height": 400,
+            "backgroundColor": "#ffffff",
+            "style": {"fontFamily": "'Inter', sans-serif"}
+        },
+        "title": {
+            "text": "Available Homes by Builder",
+            "style": {"fontSize": "18px", "fontWeight": "600", "color": "#2D3748"}
+        },
+        "subtitle": {
+            "text": "Breakdown of inventory status across competitors",
+            "style": {"fontSize": "14px", "color": "#718096"}
+        },
+        "xAxis": {
+            "categories": builder_names,
+            "title": {"text": "Builder", "style": {"fontWeight": "600"}},
+            "labels": {"style": {"fontSize": "12px", "color": "#4A5568"}}
+        },
+        "yAxis": {
+            "min": 0,
+            "title": {"text": "Number of Homes", "style": {"fontWeight": "600"}},
+            "labels": {"style": {"fontSize": "12px"}},
+            "gridLineColor": "#E2E8F0"
+        },
+        "tooltip": {
+            "shared": True,
+            "backgroundColor": "#ffffff",
+            "borderColor": "#CBD5E0",
+            "borderRadius": 8,
+            "style": {"fontSize": "12px"}
+        },
+        "plotOptions": {
+            "column": {
+                "borderRadius": 4,
+                "dataLabels": {
+                    "enabled": True,
+                    "style": {"fontSize": "11px", "fontWeight": "600"}
+                }
+            }
+        },
+        "legend": {
+            "enabled": True,
+            "align": "center",
+            "verticalAlign": "bottom",
+            "itemStyle": {"fontSize": "12px"}
+        },
+        "series": [
+            {
+                "name": "Move-in Ready",
+                "data": move_in_ready,
+                "color": "#48BB78",
+                "stack": "inventory"
+            },
+            {
+                "name": "Under Construction",
+                "data": under_construction,
+                "color": "#4299E1",
+                "stack": "inventory"
+            }
+        ],
+        "credits": {"enabled": False}
+    }
+
+    return chart_config
 
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:

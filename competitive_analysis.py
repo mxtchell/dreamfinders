@@ -330,7 +330,7 @@ def parse_dollar_amount(amount_str: str) -> float:
     return float(cleaned)
 
 
-def create_mortgage_rate_chart() -> str:
+def create_mortgage_rate_chart() -> Dict[str, Any]:
     """
     Create mortgage rate trend chart with builder offers plotted
     """
@@ -363,6 +363,10 @@ def create_mortgage_rate_chart() -> str:
 
     categories = [d["date"] for d in mortgage_data]
     rates = [d["rate"] for d in mortgage_data]
+
+    print(f"DEBUG: Mortgage chart - created {len(categories)} data points")
+    print(f"DEBUG: First category: {categories[0]}, Last category: {categories[-1]}")
+    print(f"DEBUG: First rate: {rates[0]}, Last rate: {rates[-1]}")
 
     # Create Highcharts configuration with builder offer points
     chart_config = {
@@ -423,7 +427,8 @@ def create_mortgage_rate_chart() -> str:
         "credits": {"enabled": False}
     }
 
-    return json.dumps(chart_config)
+    print(f"DEBUG: Chart config created with {len(chart_config['series'])} series")
+    return chart_config
 
 
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
@@ -449,7 +454,9 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
             builder_cards["pulte_card"] = card_content
 
     # Generate mortgage rate chart
-    mortgage_chart_json = create_mortgage_rate_chart()
+    mortgage_chart_dict = create_mortgage_rate_chart()
+    print(f"DEBUG: Mortgage chart dict created, type: {type(mortgage_chart_dict)}")
+    print(f"DEBUG: Mortgage chart keys: {list(mortgage_chart_dict.keys())}")
 
     # Ensure all cards have values
     variables = {
@@ -457,10 +464,11 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
         "pulte_card": builder_cards.get("pulte_card", "No data available"),
-        "mortgage_chart": mortgage_chart_json
+        "mortgage_chart": mortgage_chart_dict
     }
 
-    print(f"DEBUG: Variables created for {len(variables)} builders")
+    print(f"DEBUG: Variables created: {list(variables.keys())}")
+    print(f"DEBUG: mortgage_chart type in variables: {type(variables['mortgage_chart'])}")
 
     # Parse layout JSON
     import json

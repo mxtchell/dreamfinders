@@ -48,6 +48,7 @@ def competitive_analysis(parameters: SkillInput) -> SkillOutput:
     """
 
     # Extract parameters
+    print(f"DEBUG: Raw builder_names parameter: {parameters.arguments.builder_names}")
     builder_names = parameters.arguments.builder_names or "Lennar, Meritage, Dream Finders, Pulte"
     analysis_type = parameters.arguments.analysis_type or "all"
     region = parameters.arguments.region or "Atlanta"
@@ -55,6 +56,7 @@ def competitive_analysis(parameters: SkillInput) -> SkillOutput:
     # Parse builder names
     builders = [b.strip().lower() for b in builder_names.split(",")]
 
+    print(f"DEBUG: Final builder_names: {builder_names}")
     print(f"DEBUG: Analyzing builders: {builders}")
     print(f"DEBUG: Analysis type: {analysis_type}")
     print(f"DEBUG: Region: {region}")
@@ -98,8 +100,11 @@ def extract_competitive_data(builders: List[str], region: str) -> Dict[str, Any]
         "metadata": {}
     }
 
+    # Always include all major competitors
+    all_builders = list(set(builders + ["lennar", "meritage", "dream finders", "pulte"]))
+
     # Query pack for each builder
-    for builder in builders:
+    for builder in all_builders:
         print(f"DEBUG: Extracting data for {builder}")
 
         # Extract financing offers

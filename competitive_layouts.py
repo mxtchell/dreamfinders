@@ -11,7 +11,7 @@ competitive_dashboard_layout = """{
             "targets": [
                 {
                     "elementName": "Financing_Cards",
-                    "fieldName": "html"
+                    "fieldName": "text"
                 }
             ]
         },
@@ -22,7 +22,7 @@ competitive_dashboard_layout = """{
             "targets": [
                 {
                     "elementName": "Comparison_Table",
-                    "fieldName": "html"
+                    "fieldName": "text"
                 }
             ]
         },
@@ -33,7 +33,7 @@ competitive_dashboard_layout = """{
             "targets": [
                 {
                     "elementName": "Inventory_Stats",
-                    "fieldName": "html"
+                    "fieldName": "text"
                 }
             ]
         }
@@ -104,8 +104,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Financing_Cards",
-                "type": "HTML",
-                "html": "{{financing_cards_html}}",
+                "type": "Markdown",
+                "text": "{{financing_cards_html}}",
                 "parentId": "Financing_Section"
             },
             {
@@ -130,8 +130,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Comparison_Table",
-                "type": "HTML",
-                "html": "{{comparison_table_html}}",
+                "type": "Markdown",
+                "text": "{{comparison_table_html}}",
                 "parentId": "Table_Section"
             },
             {
@@ -156,8 +156,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Inventory_Stats",
-                "type": "HTML",
-                "html": "{{inventory_stats_html}}",
+                "type": "Markdown",
+                "text": "{{inventory_stats_html}}",
                 "parentId": "Inventory_Section"
             }
         ]

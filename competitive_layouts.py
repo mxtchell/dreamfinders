@@ -11,10 +11,22 @@ competitive_dashboard_layout = """{
             "targets": [{"elementName": "Lennar_Card_Text", "fieldName": "text"}]
         },
         {
+            "name": "lennar_sources",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "Lennar_Sources_HTML", "fieldName": "html"}]
+        },
+        {
             "name": "meritage_card",
             "isRequired": false,
             "defaultValue": "",
             "targets": [{"elementName": "Meritage_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "meritage_sources",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "Meritage_Sources_HTML", "fieldName": "html"}]
         },
         {
             "name": "dreamfinders_card",
@@ -23,10 +35,22 @@ competitive_dashboard_layout = """{
             "targets": [{"elementName": "DreamFinders_Card_Text", "fieldName": "text"}]
         },
         {
+            "name": "dreamfinders_sources",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "DreamFinders_Sources_HTML", "fieldName": "html"}]
+        },
+        {
             "name": "pulte_card",
             "isRequired": false,
             "defaultValue": "",
             "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "pulte_sources",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "Pulte_Sources_HTML", "fieldName": "html"}]
         },
         {
             "name": "mortgage_chart",
@@ -144,9 +168,15 @@ competitive_dashboard_layout = """{
                     "fontSize": "14px",
                     "lineHeight": "1.6",
                     "color": "#333333",
-                    "margin": "0",
+                    "margin": "0 0 12px 0",
                     "whiteSpace": "pre-wrap"
                 },
+                "parentId": "Lennar_Card"
+            },
+            {
+                "name": "Lennar_Sources_HTML",
+                "type": "HTML",
+                "html": "{{lennar_sources}}",
                 "parentId": "Lennar_Card"
             },
             {
@@ -185,9 +215,15 @@ competitive_dashboard_layout = """{
                     "fontSize": "14px",
                     "lineHeight": "1.6",
                     "color": "#333333",
-                    "margin": "0",
+                    "margin": "0 0 12px 0",
                     "whiteSpace": "pre-wrap"
                 },
+                "parentId": "Meritage_Card"
+            },
+            {
+                "name": "Meritage_Sources_HTML",
+                "type": "HTML",
+                "html": "{{meritage_sources}}",
                 "parentId": "Meritage_Card"
             },
             {
@@ -226,9 +262,15 @@ competitive_dashboard_layout = """{
                     "fontSize": "14px",
                     "lineHeight": "1.6",
                     "color": "#333333",
-                    "margin": "0",
+                    "margin": "0 0 12px 0",
                     "whiteSpace": "pre-wrap"
                 },
+                "parentId": "DreamFinders_Card"
+            },
+            {
+                "name": "DreamFinders_Sources_HTML",
+                "type": "HTML",
+                "html": "{{dreamfinders_sources}}",
                 "parentId": "DreamFinders_Card"
             },
             {
@@ -267,9 +309,15 @@ competitive_dashboard_layout = """{
                     "fontSize": "14px",
                     "lineHeight": "1.6",
                     "color": "#333333",
-                    "margin": "0",
+                    "margin": "0 0 12px 0",
                     "whiteSpace": "pre-wrap"
                 },
+                "parentId": "Pulte_Card"
+            },
+            {
+                "name": "Pulte_Sources_HTML",
+                "type": "HTML",
+                "html": "{{pulte_sources}}",
                 "parentId": "Pulte_Card"
             }
         ]

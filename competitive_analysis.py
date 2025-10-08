@@ -521,12 +521,16 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     print(f"DEBUG: Mortgage chart dict created, type: {type(mortgage_chart_dict)}")
     print(f"DEBUG: Mortgage chart keys: {list(mortgage_chart_dict.keys())}")
 
-    # Ensure all cards have values
+    # Ensure all cards have values and generate sources HTML
     variables = {
         "lennar_card": builder_cards.get("lennar_card", "No data available"),
+        "lennar_sources": create_builder_sources_html("lennar"),
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
+        "meritage_sources": create_builder_sources_html("meritage"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
+        "dreamfinders_sources": create_builder_sources_html("dream finders"),
         "pulte_card": builder_cards.get("pulte_card", "No data available"),
+        "pulte_sources": create_builder_sources_html("pulte"),
         "mortgage_chart": mortgage_chart_dict
     }
 
@@ -592,11 +596,11 @@ def generate_insights_narrative(data: Dict[str, Any], insights: Dict[str, Any]) 
             savings_needed = int((df_rate - best_rate_val) * 100 * 2500)  # Rough monthly payment impact
             opportunities.append(f"**Match or beat leading rate:** Lowering to {best_rate_val}% could save buyers ~${savings_needed}/month, improving conversion rates")
 
-    # Incentive opportunities
+    # Incentive opportunities - only show if competitor has better incentive
     if insights.get("best_incentive"):
         best_incentive = insights["best_incentive"]
-        df_incentive_amount = 21000 if df_financing.get("incentives") else 0
-        if df_incentive_amount < 25000:
+        # Skip if Dream Finders is already the leader
+        if "dream" not in best_incentive['builder'].lower():
             opportunities.append(f"**Increase closing cost assistance:** {best_incentive['builder'].title()} offers {best_incentive['amount']}. Consider matching or exceeding to win buyers on the fence")
 
     # Inventory opportunities
@@ -766,14 +770,28 @@ def create_builder_card(builder: str, data: Dict[str, Any]) -> str:
 
         card_text += "\n"
 
-    # Add source links (using HTML for clickable links in Paragraph component)
-    source_links = get_builder_source_links(builder)
-    if source_links:
-        card_text += "SOURCES\n"
-        for link in source_links:
-            card_text += f'• <a href="{link["url"]}" target="_blank" style="color: #667eea; text-decoration: none;">{link["title"]}</a>\n'
-
     return card_text.strip() if card_text else "No data available"
+
+
+def create_builder_sources_html(builder: str) -> str:
+    """
+    Create HTML string for builder source links
+    """
+    source_links = get_builder_source_links(builder)
+    if not source_links:
+        return ""
+
+    html = '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;">'
+    html += '<div style="font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px;">SOURCES</div>'
+
+    for link in source_links:
+        html += f'<div style="margin-bottom: 4px;">'
+        html += f'<a href="{link["url"]}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px; display: flex; align-items: center;">'
+        html += f'<span style="margin-right: 4px;">📄</span>{link["title"]}'
+        html += '</a></div>'
+
+    html += '</div>'
+    return html
 
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:

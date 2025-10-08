@@ -104,14 +104,13 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Financing_Cards",
-                "type": "Markdown",
+                "type": "Paragraph",
                 "text": "{{financing_cards_html}}",
                 "style": {
                     "margin": "0",
-                    "padding": "0"
+                    "padding": "0",
+                    "whiteSpace": "pre-wrap"
                 },
-                "minHeight": "0px",
-                "maxHeight": "none",
                 "parentId": "Financing_Section"
             },
             {
@@ -136,14 +135,13 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Comparison_Table",
-                "type": "Markdown",
+                "type": "Paragraph",
                 "text": "{{comparison_table_html}}",
                 "style": {
                     "margin": "0",
-                    "padding": "0"
+                    "padding": "0",
+                    "whiteSpace": "pre-wrap"
                 },
-                "minHeight": "0px",
-                "maxHeight": "none",
                 "parentId": "Table_Section"
             },
             {
@@ -168,14 +166,13 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Inventory_Stats",
-                "type": "Markdown",
+                "type": "Paragraph",
                 "text": "{{inventory_stats_html}}",
                 "style": {
                     "margin": "0",
-                    "padding": "0"
+                    "padding": "0",
+                    "whiteSpace": "pre-wrap"
                 },
-                "minHeight": "0px",
-                "maxHeight": "none",
                 "parentId": "Inventory_Section"
             }
         ]

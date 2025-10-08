@@ -690,24 +690,35 @@ def get_builder_source_links(builder: str) -> List[Dict[str, str]]:
     """
     Get document source links for a builder
     Returns list of dicts with 'title' and 'url' keys
+    Maps file names to actual knowledge base document IDs
     """
     base_url = "https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base"
 
-    # Map builder to their document IDs and titles
+    # Map file names to actual document IDs in knowledge base
+    file_to_doc_id = {
+        "New Homes for Sale _ Lennar.pdf": "abb40c5f-f259-48bf-85c3-d2ed1ea956b8",
+        "Lennar_special_promo_atlanta.pdf": "ab2fe118-0443-444d-8f86-2c37f3f51e07",
+        "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf": "7f0292db-d935-4c90-b65b-897bb98167f9",
+        "Best Deals On Top Homes _ Dream Finders Homes – Atlanta.pdf": "7246bfb4-49a8-4d10-af16-c21e4379bfa1",
+        "Atlanta, GA New Homes _ Dream Finders Homes.pdf": "1b33935b-3bd8-41a5-9531-ea3ab3fd7314",
+        "pulte_atl.pdf": "a9c75b89-727d-410e-ae6a-be0a3f409d93"
+    }
+
+    # Map builder to their document files and titles
     builder_docs = {
         "lennar": [
-            {"title": "Atlanta - Lennar - Current Inventory", "doc_id": "unknown", "file": "New Homes for Sale _ Lennar.pdf"},
-            {"title": "Atlanta - Lennar - Special Financing", "doc_id": "unknown", "file": "Lennar_special_promo_atlanta.pdf"}
+            {"title": "Atlanta - Lennar - Move In Ready", "file": "New Homes for Sale _ Lennar.pdf"},
+            {"title": "Atlanta - Lennar - Special Financing", "file": "Lennar_special_promo_atlanta.pdf"}
         ],
         "meritage": [
-            {"title": "Atlanta - Meritage - Current Inventory", "doc_id": "unknown", "file": "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf"}
+            {"title": "Atlanta - Meritage - Sales Event & Quick Move In", "file": "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf"}
         ],
         "dream finders": [
-            {"title": "Atlanta - Dream Finders - Special Offers", "doc_id": "unknown", "file": "Best Deals On Top Homes _ Dream Finders Homes – Atlanta.pdf"},
-            {"title": "Atlanta - Dream Finders - Current Inventory", "doc_id": "unknown", "file": "Atlanta, GA New Homes _ Dream Finders Homes.pdf"}
+            {"title": "Atlanta - Dream Finders - Quick Move In Homes", "file": "Best Deals On Top Homes _ Dream Finders Homes – Atlanta.pdf"},
+            {"title": "Atlanta - Dream Finders - Additional Homes", "file": "Atlanta, GA New Homes _ Dream Finders Homes.pdf"}
         ],
         "pulte": [
-            {"title": "Atlanta - Pulte - Current Inventory", "doc_id": "unknown", "file": "pulte_atl.pdf"}
+            {"title": "Atlanta - Pulte - Current Inventory", "file": "pulte_atl.pdf"}
         ]
     }
 
@@ -715,7 +726,8 @@ def get_builder_source_links(builder: str) -> List[Dict[str, str]]:
     links = []
 
     for doc in docs:
-        url = f"{base_url}/{doc['doc_id']}#page=1"
+        doc_id = file_to_doc_id.get(doc["file"], "unknown")
+        url = f"{base_url}/{doc_id}#page=1"
         links.append({"title": doc["title"], "url": url})
 
     return links

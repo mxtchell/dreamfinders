@@ -82,11 +82,11 @@ competitive_dashboard_layout = """{
                 "name": "CardsRow_Container",
                 "type": "FlexContainer",
                 "direction": "row",
-                "minHeight": "calc(100vh - 120px)",
                 "style": {
                     "padding": "0 32px 32px 32px",
                     "gap": "24px",
-                    "flexWrap": "nowrap"
+                    "flexWrap": "nowrap",
+                    "alignItems": "flex-start"
                 }
             },
             {

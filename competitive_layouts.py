@@ -27,6 +27,12 @@ competitive_dashboard_layout = """{
             "isRequired": false,
             "defaultValue": "",
             "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "mortgage_chart",
+            "isRequired": false,
+            "defaultValue": "{}",
+            "targets": [{"elementName": "MortgageChart", "fieldName": "options"}]
         }
     ],
     "layoutJson": {
@@ -71,6 +77,25 @@ competitive_dashboard_layout = """{
                     "margin": "6px 0 0 0"
                 },
                 "parentId": "Header_Container"
+            },
+            {
+                "name": "ChartSection_Container",
+                "type": "FlexContainer",
+                "direction": "column",
+                "style": {
+                    "backgroundColor": "#ffffff",
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "margin": "0 32px 24px 32px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                }
+            },
+            {
+                "name": "MortgageChart",
+                "type": "HighchartsChart",
+                "options": {},
+                "parentId": "ChartSection_Container"
             },
             {
                 "name": "CardsRow_Container",

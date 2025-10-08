@@ -330,6 +330,102 @@ def parse_dollar_amount(amount_str: str) -> float:
     return float(cleaned)
 
 
+def create_mortgage_rate_chart() -> str:
+    """
+    Create mortgage rate trend chart with builder offers plotted
+    """
+    # Hardcoded Freddie Mac 30-year mortgage rates (2024 onwards)
+    mortgage_data = [
+        {"date": "Jan 2024", "rate": 6.67}, {"date": "Jan 2024", "rate": 6.64},
+        {"date": "Feb 2024", "rate": 6.65}, {"date": "Feb 2024", "rate": 6.74},
+        {"date": "Mar 2024", "rate": 6.85}, {"date": "Mar 2024", "rate": 6.88},
+        {"date": "Apr 2024", "rate": 6.95}, {"date": "Apr 2024", "rate": 7.02},
+        {"date": "May 2024", "rate": 7.10}, {"date": "May 2024", "rate": 7.15},
+        {"date": "Jun 2024", "rate": 7.05}, {"date": "Jun 2024", "rate": 6.98},
+        {"date": "Jul 2024", "rate": 6.89}, {"date": "Jul 2024", "rate": 6.82},
+        {"date": "Aug 2024", "rate": 6.75}, {"date": "Aug 2024", "rate": 6.68},
+        {"date": "Sep 2024", "rate": 6.59}, {"date": "Sep 2024", "rate": 6.52},
+        {"date": "Oct 2024", "rate": 6.45}, {"date": "Oct 2024", "rate": 6.39},
+        {"date": "Nov 2024", "rate": 6.32}, {"date": "Nov 2024", "rate": 6.28},
+        {"date": "Dec 2024", "rate": 6.24}, {"date": "Dec 2024", "rate": 6.21},
+        {"date": "Jan 2025", "rate": 6.98}, {"date": "Jan 2025", "rate": 6.96},
+        {"date": "Feb 2025", "rate": 6.95}, {"date": "Feb 2025", "rate": 6.88},
+        {"date": "Mar 2025", "rate": 6.86}, {"date": "Mar 2025", "rate": 6.89},
+        {"date": "Apr 2025", "rate": 6.94}, {"date": "Apr 2025", "rate": 6.98},
+        {"date": "May 2025", "rate": 6.91}, {"date": "May 2025", "rate": 6.86},
+        {"date": "Jun 2025", "rate": 6.84}, {"date": "Jun 2025", "rate": 6.77},
+        {"date": "Jul 2025", "rate": 6.72}, {"date": "Jul 2025", "rate": 6.74},
+        {"date": "Aug 2025", "rate": 6.63}, {"date": "Aug 2025", "rate": 6.56},
+        {"date": "Sep 2025", "rate": 6.50}, {"date": "Sep 2025", "rate": 6.35},
+        {"date": "Sep 2025", "rate": 6.26}, {"date": "Sep 2025", "rate": 6.30},
+        {"date": "Oct 2025", "rate": 6.34}
+    ]
+
+    categories = [d["date"] for d in mortgage_data]
+    rates = [d["rate"] for d in mortgage_data]
+
+    # Create Highcharts configuration with builder offer points
+    chart_config = {
+        "chart": {"type": "line", "height": 400, "backgroundColor": "#FAFAFA"},
+        "title": {
+            "text": "US Weekly Avg Mortgage Rates (30-Year Fixed)",
+            "style": {"fontSize": "18px", "fontWeight": "700", "color": "#2C3E50"}
+        },
+        "subtitle": {
+            "text": "Source: Freddie Mac | Builder offers shown as points",
+            "style": {"fontSize": "12px", "color": "#7F8C8D"}
+        },
+        "xAxis": {
+            "categories": categories,
+            "title": {"text": ""},
+            "labels": {"rotation": -45, "style": {"fontSize": "10px"}}
+        },
+        "yAxis": {
+            "title": {"text": "Interest Rate (%)", "style": {"fontWeight": "bold"}},
+            "labels": {"format": "{value}%"}
+        },
+        "tooltip": {
+            "shared": True,
+            "crosshairs": True,
+            "pointFormat": "<span style=\"color:{series.color}\">\u25CF</span> {series.name}: <b>{point.y}%</b><br/>"
+        },
+        "legend": {"enabled": True, "align": "center", "verticalAlign": "bottom"},
+        "series": [
+            {
+                "name": "Market Rate",
+                "data": rates,
+                "color": "#95a5a6",
+                "lineWidth": 2,
+                "marker": {"enabled": False}
+            },
+            {
+                "name": "Lennar",
+                "type": "scatter",
+                "data": [[43, 3.75]],  # Sep 2025 index, 3.75% rate
+                "color": "#3498db",
+                "marker": {"radius": 8, "symbol": "circle"}
+            },
+            {
+                "name": "Meritage",
+                "type": "scatter",
+                "data": [[43, 2.99]],  # Sep 2025 index, 2.99% rate
+                "color": "#e74c3c",
+                "marker": {"radius": 8, "symbol": "diamond"}
+            },
+            {
+                "name": "Dream Finders",
+                "type": "scatter",
+                "data": [[43, 2.99]],  # Sep 2025 index, 2.99% rate
+                "color": "#9b59b6",
+                "marker": {"radius": 8, "symbol": "square"}
+            }
+        ],
+        "credits": {"enabled": False}
+    }
+
+    return json.dumps(chart_config)
+
+
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
     """
     Create competitive dashboard with individual builder cards
@@ -352,12 +448,16 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         elif "pulte" in builder.lower():
             builder_cards["pulte_card"] = card_content
 
+    # Generate mortgage rate chart
+    mortgage_chart_json = create_mortgage_rate_chart()
+
     # Ensure all cards have values
     variables = {
         "lennar_card": builder_cards.get("lennar_card", "No data available"),
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
-        "pulte_card": builder_cards.get("pulte_card", "No data available")
+        "pulte_card": builder_cards.get("pulte_card", "No data available"),
+        "mortgage_chart": mortgage_chart_json
     }
 
     print(f"DEBUG: Variables created for {len(variables)} builders")

@@ -28,12 +28,6 @@ competitive_dashboard_layout = """{
             "defaultValue": "",
             "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
         },
-        {
-            "name": "insights",
-            "isRequired": false,
-            "defaultValue": "",
-            "targets": [{"elementName": "Insights_Text", "fieldName": "text"}]
-        }
     ],
     "layoutJson": {
         "type": "Document",
@@ -252,45 +246,6 @@ competitive_dashboard_layout = """{
                     "whiteSpace": "pre-wrap"
                 },
                 "parentId": "Pulte_Card"
-            },
-            {
-                "name": "Insights_Container",
-                "type": "FlexContainer",
-                "direction": "column",
-                "style": {
-                    "backgroundColor": "#ffffff",
-                    "borderRadius": "8px",
-                    "padding": "20px",
-                    "margin": "0 32px 32px 32px",
-                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                    "border": "1px solid #e0e0e0",
-                    "minHeight": "200px"
-                }
-            },
-            {
-                "name": "Insights_Title",
-                "type": "Header",
-                "text": "Market Insights",
-                "style": {
-                    "fontSize": "20px",
-                    "fontWeight": "700",
-                    "color": "#1a1a1a",
-                    "margin": "0 0 12px 0"
-                },
-                "parentId": "Insights_Container"
-            },
-            {
-                "name": "Insights_Text",
-                "type": "Paragraph",
-                "text": "{{insights}}",
-                "style": {
-                    "fontSize": "14px",
-                    "lineHeight": "1.6",
-                    "color": "#333333",
-                    "margin": "0",
-                    "whiteSpace": "pre-wrap"
-                },
-                "parentId": "Insights_Container"
             }
         ]
     }

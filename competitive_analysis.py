@@ -77,8 +77,12 @@ def competitive_analysis(parameters: SkillInput) -> SkillOutput:
     # Generate narrative
     narrative = format_narrative(competitive_data, insights, analysis_type)
 
+    # Generate insights for narrative
+    insights_narrative = generate_insights_narrative(competitive_data, insights)
+
     return SkillOutput(
         final_prompt=narrative,
+        narrative=insights_narrative,
         visualizations=[viz] if viz else None
     )
 
@@ -348,16 +352,12 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         elif "pulte" in builder.lower():
             builder_cards["pulte_card"] = card_content
 
-    # Generate insights summary
-    insights_text = generate_insights_summary(data)
-
     # Ensure all cards have values
     variables = {
         "lennar_card": builder_cards.get("lennar_card", "No data available"),
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
-        "pulte_card": builder_cards.get("pulte_card", "No data available"),
-        "insights": insights_text
+        "pulte_card": builder_cards.get("pulte_card", "No data available")
     }
 
     print(f"DEBUG: Variables created for {len(variables)} builders")
@@ -375,6 +375,49 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         title="Competitive Analysis",
         layout=rendered
     )
+
+
+def generate_insights_narrative(data: Dict[str, Any], insights: Dict[str, Any]) -> str:
+    """
+    Generate detailed insights narrative for the narrative section
+    """
+    narrative_parts = []
+
+    # Best rate comparison
+    if insights.get("best_rate"):
+        best = insights["best_rate"]
+        narrative_parts.append(f"**BEST RATE:** {best['builder'].title()} offers the most competitive financing at {best['rate']}")
+
+    # Inventory leader
+    if insights.get("market_leader"):
+        leader = insights["market_leader"]
+        narrative_parts.append(f"**INVENTORY LEADER:** {leader['builder'].title()} has {leader['homes']} homes available, the largest inventory in the market")
+
+    # Dream Finders competitive position
+    df_financing = data["financing"].get("dreamfinders") or data["financing"].get("dream finders")
+    if df_financing and df_financing.get("rates"):
+        best_rate = float(insights.get("best_rate", {}).get("rate", "0").replace("%", ""))
+        df_rate = float(df_financing["rates"][0]["rate"].replace("%", ""))
+        rate_diff = df_rate - best_rate
+        if rate_diff == 0:
+            narrative_parts.append(f"**COMPETITIVE POSITION:** Dream Finders matches the market-leading rate")
+        elif rate_diff < 1:
+            narrative_parts.append(f"**COMPETITIVE POSITION:** Dream Finders is within {rate_diff:.2f}% of the best market rate")
+        else:
+            narrative_parts.append(f"**OPPORTUNITY:** Dream Finders rate is {rate_diff:.2f}% above the market leader")
+
+    # Best incentive
+    if insights.get("best_incentive"):
+        best = insights["best_incentive"]
+        narrative_parts.append(f"**TOP INCENTIVE:** {best['builder'].title()} offers up to {best['amount']} in savings/incentives")
+
+    # Recommendations
+    if insights.get("recommendations"):
+        narrative_parts.append("\n**STRATEGIC RECOMMENDATIONS:**")
+        for i, rec in enumerate(insights["recommendations"], 1):
+            narrative_parts.append(f"{i}. {rec}")
+
+    return "\n\n".join(narrative_parts) if narrative_parts else "Insufficient data for insights"
 
 
 def generate_insights_summary(data: Dict[str, Any]) -> str:

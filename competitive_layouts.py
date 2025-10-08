@@ -102,10 +102,10 @@ competitive_dashboard_layout = """{
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 },
                 "parentId": "CardsRow_Container"
             },
@@ -114,12 +114,12 @@ competitive_dashboard_layout = """{
                 "type": "Header",
                 "text": "Lennar",
                 "style": {
-                    "fontSize": "28px",
+                    "fontSize": "20px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
                     "margin": "0 0 8px 0",
-                    "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "8px"
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "6px"
                 },
                 "parentId": "Lennar_Card"
             },
@@ -128,8 +128,8 @@ competitive_dashboard_layout = """{
                 "type": "Paragraph",
                 "text": "{{lennar_card}}",
                 "style": {
-                    "fontSize": "18px",
-                    "lineHeight": "1.8",
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"
@@ -143,10 +143,10 @@ competitive_dashboard_layout = """{
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 },
                 "parentId": "CardsRow_Container"
             },
@@ -155,12 +155,12 @@ competitive_dashboard_layout = """{
                 "type": "Header",
                 "text": "Meritage",
                 "style": {
-                    "fontSize": "28px",
+                    "fontSize": "20px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
                     "margin": "0 0 8px 0",
-                    "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "8px"
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "6px"
                 },
                 "parentId": "Meritage_Card"
             },
@@ -169,8 +169,8 @@ competitive_dashboard_layout = """{
                 "type": "Paragraph",
                 "text": "{{meritage_card}}",
                 "style": {
-                    "fontSize": "18px",
-                    "lineHeight": "1.8",
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"
@@ -184,10 +184,10 @@ competitive_dashboard_layout = """{
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 },
                 "parentId": "CardsRow_Container"
             },
@@ -196,12 +196,12 @@ competitive_dashboard_layout = """{
                 "type": "Header",
                 "text": "Dream Finders",
                 "style": {
-                    "fontSize": "28px",
+                    "fontSize": "20px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
                     "margin": "0 0 8px 0",
-                    "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "8px"
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "6px"
                 },
                 "parentId": "DreamFinders_Card"
             },
@@ -210,8 +210,8 @@ competitive_dashboard_layout = """{
                 "type": "Paragraph",
                 "text": "{{dreamfinders_card}}",
                 "style": {
-                    "fontSize": "18px",
-                    "lineHeight": "1.8",
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"
@@ -225,10 +225,10 @@ competitive_dashboard_layout = """{
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 },
                 "parentId": "CardsRow_Container"
             },
@@ -237,12 +237,12 @@ competitive_dashboard_layout = """{
                 "type": "Header",
                 "text": "DR Horton",
                 "style": {
-                    "fontSize": "28px",
+                    "fontSize": "20px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
                     "margin": "0 0 8px 0",
-                    "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "8px"
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "6px"
                 },
                 "parentId": "DRHorton_Card"
             },
@@ -251,8 +251,8 @@ competitive_dashboard_layout = """{
                 "type": "Paragraph",
                 "text": "{{drhorton_card}}",
                 "style": {
-                    "fontSize": "18px",
-                    "lineHeight": "1.8",
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"
@@ -266,10 +266,10 @@ competitive_dashboard_layout = """{
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 },
                 "parentId": "CardsRow_Container"
             },
@@ -278,12 +278,12 @@ competitive_dashboard_layout = """{
                 "type": "Header",
                 "text": "Pulte",
                 "style": {
-                    "fontSize": "28px",
+                    "fontSize": "20px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
                     "margin": "0 0 8px 0",
-                    "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "8px"
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "6px"
                 },
                 "parentId": "Pulte_Card"
             },
@@ -292,8 +292,8 @@ competitive_dashboard_layout = """{
                 "type": "Paragraph",
                 "text": "{{pulte_card}}",
                 "style": {
-                    "fontSize": "18px",
-                    "lineHeight": "1.8",
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"
@@ -306,11 +306,11 @@ competitive_dashboard_layout = """{
                 "direction": "column",
                 "style": {
                     "backgroundColor": "#ffffff",
-                    "borderRadius": "12px",
-                    "padding": "32px",
+                    "borderRadius": "8px",
+                    "padding": "20px",
                     "margin": "0 32px 32px 32px",
-                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
-                    "border": "2px solid #e0e0e0"
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
                 }
             },
             {
@@ -331,7 +331,7 @@ competitive_dashboard_layout = """{
                 "text": "{{insights}}",
                 "style": {
                     "fontSize": "16px",
-                    "lineHeight": "1.8",
+                    "lineHeight": "1.6",
                     "color": "#333333",
                     "margin": "0",
                     "whiteSpace": "pre-wrap"

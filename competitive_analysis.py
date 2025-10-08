@@ -370,19 +370,9 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:
     """
-    Create markdown-formatted financing offer cards
+    Create simple text-formatted financing offer cards
     """
-    cards_md = ""
-
-    # Color schemes for each builder
-    colors = {
-        "lennar": {"bg": "#FF6B6B", "accent": "#FF5252"},
-        "meritage": {"bg": "#4ECDC4", "accent": "#45B7AF"},
-        "dream finders": {"bg": "#95E1D3", "accent": "#7FD3C1"},
-        "dreamfinders": {"bg": "#95E1D3", "accent": "#7FD3C1"},
-        "dr horton": {"bg": "#F38181", "accent": "#F37070"},
-        "pulte": {"bg": "#AA96DA", "accent": "#9A86CA"}
-    }
+    cards_text = ""
 
     for builder, financing in financing_data.items():
         builder_display = builder.replace("dreamfinders", "Dream Finders").title()
@@ -401,76 +391,71 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
         # Get expiration
         expiration = financing.get("expiration", "Ongoing")
 
-        cards_md += f"""
-### {builder_display} - **{best_rate}** {rate_type}
+        cards_text += f"{builder_display} - {best_rate} {rate_type}\n"
+        cards_text += f"Incentive: {incentive}\n"
+        cards_text += f"Expires: {expiration}\n\n"
 
-**Incentive:** {incentive}
-
-**Expires:** {expiration}
-
----
-
-"""
-
-    return cards_md
+    return cards_text
 
 
 def create_comparison_table(data: Dict[str, Any]) -> str:
     """
-    Create Markdown comparison table
+    Create simple text comparison table
     """
     builders = list(data["financing"].keys())
     builder_displays = [b.replace("dreamfinders", "Dream Finders").title() for b in builders]
 
-    # Create markdown table header
-    table_md = "| Metric | " + " | ".join(builder_displays) + " |\n"
-    table_md += "|--------|" + "|".join(["--------" for _ in builders]) + "|\n"
+    table_text = ""
+
+    # Header
+    table_text += "Metric: " + " | ".join(builder_displays) + "\n"
+    table_text += "-" * 80 + "\n"
 
     # Best Rate Row
-    rate_row = "| **Best Rate** | "
+    rates = []
     for builder in builders:
         rate = data["financing"][builder]["rates"][0]["rate"] if data["financing"][builder].get("rates") else "N/A"
-        rate_row += f"**{rate}** | "
-    table_md += rate_row + "\n"
+        rates.append(rate)
+    table_text += "Best Rate: " + " | ".join(rates) + "\n"
 
     # Incentives Row
-    inc_row = "| **Incentives** | "
+    incentives = []
     for builder in builders:
         incentive = data["financing"][builder]["incentives"][0] if data["financing"][builder].get("incentives") else "-"
-        short_inc = incentive[:25] + "..." if len(incentive) > 25 else incentive
-        inc_row += f"{short_inc} | "
-    table_md += inc_row + "\n"
+        short_inc = incentive[:20] + "..." if len(incentive) > 20 else incentive
+        incentives.append(short_inc)
+    table_text += "Incentives: " + " | ".join(incentives) + "\n"
 
     # Total Homes Row
-    homes_row = "| **Available Homes** | "
+    homes = []
     for builder in builders:
         total = data["inventory"].get(builder, {}).get("total_homes", 0)
-        homes_row += f"{total} | "
-    table_md += homes_row + "\n"
+        homes.append(str(total))
+    table_text += "Available Homes: " + " | ".join(homes) + "\n"
 
     # Communities Row
-    comm_row = "| **Communities** | "
+    comms = []
     for builder in builders:
         communities = data["inventory"].get(builder, {}).get("communities", 0)
-        comm_row += f"{communities} | "
-    table_md += comm_row + "\n"
+        comms.append(str(communities))
+    table_text += "Communities: " + " | ".join(comms) + "\n"
 
     # Avg Price Row
-    price_row = "| **Avg Price** | "
+    prices = []
     for builder in builders:
         avg_price = data["pricing"].get(builder, {}).get("avg_price", 0)
         price_display = f"${avg_price:,.0f}" if avg_price else "N/A"
-        price_row += f"{price_display} | "
-    table_md += price_row + "\n"
+        prices.append(price_display)
+    table_text += "Avg Price: " + " | ".join(prices) + "\n"
 
-    return table_md
+    return table_text
 
 
 def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
     """
-    Create markdown inventory statistics
+    Create simple text inventory statistics
     """
-    stats_md = ""
+    stats_text = ""
 
     for builder, inventory in inventory_data.items():
         builder_display = builder.replace("dreamfinders", "Dream Finders").title()
@@ -478,15 +463,11 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
         move_in = inventory.get("move_in_ready", 0)
         under_construction = inventory.get("under_construction", 0)
 
-        stats_md += f"""
-#### {builder_display}: **{total}** Total Homes
+        stats_text += f"{builder_display}: {total} Total Homes\n"
+        stats_text += f"  Move-in Ready: {move_in}\n"
+        stats_text += f"  Under Construction: {under_construction}\n\n"
 
-- **Move-in Ready:** {move_in}
-- **Under Construction:** {under_construction}
-
-"""
-
-    return stats_md
+    return stats_text
 
 
 def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_type: str) -> str:

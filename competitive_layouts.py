@@ -93,7 +93,6 @@ competitive_dashboard_layout = """{
                 "name": "Lennar_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100%",
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
@@ -135,7 +134,6 @@ competitive_dashboard_layout = """{
                 "name": "Meritage_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100%",
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
@@ -177,7 +175,6 @@ competitive_dashboard_layout = """{
                 "name": "DreamFinders_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100%",
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
@@ -219,7 +216,6 @@ competitive_dashboard_layout = """{
                 "name": "DRHorton_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100%",
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",
@@ -261,7 +257,6 @@ competitive_dashboard_layout = """{
                 "name": "Pulte_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100%",
                 "style": {
                     "flex": "1",
                     "backgroundColor": "#ffffff",

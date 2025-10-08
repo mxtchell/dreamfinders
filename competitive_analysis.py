@@ -335,7 +335,7 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     # Create individual builder cards
     builder_cards = {}
 
-    for builder in ["lennar", "meritage", "dreamfinders", "dream finders", "dr horton", "pulte"]:
+    for builder in ["lennar", "meritage", "dreamfinders", "dream finders", "pulte"]:
         card_content = create_builder_card(builder, data)
 
         # Map to variable names
@@ -345,8 +345,6 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
             builder_cards["meritage_card"] = card_content
         elif "dream" in builder.lower():
             builder_cards["dreamfinders_card"] = card_content
-        elif "horton" in builder.lower():
-            builder_cards["drhorton_card"] = card_content
         elif "pulte" in builder.lower():
             builder_cards["pulte_card"] = card_content
 
@@ -358,7 +356,6 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         "lennar_card": builder_cards.get("lennar_card", "No data available"),
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
-        "drhorton_card": builder_cards.get("drhorton_card", "No data available"),
         "pulte_card": builder_cards.get("pulte_card", "No data available"),
         "insights": insights_text
     }

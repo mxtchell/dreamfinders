@@ -482,6 +482,14 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
                 "color": "#9b59b6",
                 "marker": {"radius": 11, "symbol": "square", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10
+            },
+            {
+                "name": "Pulte (3.99%)",
+                "type": "scatter",
+                "data": [[25, 3.99]],  # Center position
+                "color": "#e67e22",
+                "marker": {"radius": 11, "symbol": "triangle", "lineWidth": 2, "lineColor": "#ffffff"},
+                "zIndex": 10
             }
         ],
         "credits": {"enabled": False}

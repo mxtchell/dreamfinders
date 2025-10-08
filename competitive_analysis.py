@@ -370,9 +370,9 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:
     """
-    Create beautiful cards for each builder's financing offers
+    Create markdown-formatted financing offer cards
     """
-    cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">'
+    cards_md = ""
 
     # Color schemes for each builder
     colors = {
@@ -386,7 +386,6 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
 
     for builder, financing in financing_data.items():
         builder_display = builder.replace("dreamfinders", "Dream Finders").title()
-        color_scheme = colors.get(builder.lower(), {"bg": "#667eea", "accent": "#5568d3"})
 
         # Get best rate
         best_rate = "N/A"
@@ -402,97 +401,76 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
         # Get expiration
         expiration = financing.get("expiration", "Ongoing")
 
-        cards_html += f"""
-        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-left: 5px solid {color_scheme['bg']};">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h3 style="margin: 0; color: #2D3748; font-size: 20px; font-weight: 700;">{builder_display}</h3>
-                <div style="background: {color_scheme['bg']}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">ACTIVE</div>
-            </div>
+        cards_md += f"""
+### {builder_display} - **{best_rate}** {rate_type}
 
-            <div style="background: {color_scheme['bg']}15; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
-                <div style="font-size: 36px; font-weight: 700; color: {color_scheme['bg']}; margin-bottom: 4px;">{best_rate}</div>
-                <div style="font-size: 13px; color: #718096; font-weight: 500;">{rate_type}</div>
-            </div>
+💎 **Incentive:** {incentive}
 
-            <div style="color: #4A5568; font-size: 14px; margin-bottom: 12px; line-height: 1.5;">
-                <strong>💎 Incentive:</strong><br/>{incentive}
-            </div>
+⏰ **Expires:** {expiration}
 
-            <div style="color: #A0AEC0; font-size: 12px; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-                ⏰ Expires: {expiration}
-            </div>
-        </div>
-        """
+---
 
-    cards_html += '</div>'
-    return cards_html
+"""
+
+    return cards_md
 
 
 def create_comparison_table(data: Dict[str, Any]) -> str:
     """
-    Create comprehensive comparison table
+    Create Markdown comparison table
     """
     builders = list(data["financing"].keys())
+    builder_displays = [b.replace("dreamfinders", "Dream Finders").title() for b in builders]
 
-    table_html = """
-    <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <thead>
-                <tr style="background: #F7FAFC; border-bottom: 2px solid #E2E8F0;">
-                    <th style="padding: 12px; text-align: left; color: #2D3748; font-weight: 600;">Metric</th>
-    """
-
-    for builder in builders:
-        builder_display = builder.replace("dreamfinders", "Dream Finders").title()
-        table_html += f'<th style="padding: 12px; text-align: center; color: #2D3748; font-weight: 600;">{builder_display}</th>'
-
-    table_html += "</tr></thead><tbody>"
+    # Create markdown table header
+    table_md = "| Metric | " + " | ".join(builder_displays) + " |\n"
+    table_md += "|--------|" + "|".join(["--------" for _ in builders]) + "|\n"
 
     # Best Rate Row
-    table_html += '<tr style="border-bottom: 1px solid #E2E8F0;"><td style="padding: 12px; color: #4A5568; font-weight: 500;">Best Rate</td>'
+    rate_row = "| **Best Rate** | "
     for builder in builders:
         rate = data["financing"][builder]["rates"][0]["rate"] if data["financing"][builder].get("rates") else "N/A"
-        table_html += f'<td style="padding: 12px; text-align: center; color: #2B6CB0; font-weight: 600;">{rate}</td>'
-    table_html += "</tr>"
+        rate_row += f"**{rate}** | "
+    table_md += rate_row + "\n"
 
     # Incentives Row
-    table_html += '<tr style="border-bottom: 1px solid #E2E8F0;"><td style="padding: 12px; color: #4A5568; font-weight: 500;">Incentives</td>'
+    inc_row = "| **Incentives** | "
     for builder in builders:
         incentive = data["financing"][builder]["incentives"][0] if data["financing"][builder].get("incentives") else "-"
-        table_html += f'<td style="padding: 12px; text-align: center; color: #38A169; font-size: 13px;">{incentive[:30]}...</td>'
-    table_html += "</tr>"
+        short_inc = incentive[:25] + "..." if len(incentive) > 25 else incentive
+        inc_row += f"{short_inc} | "
+    table_md += inc_row + "\n"
 
     # Total Homes Row
-    table_html += '<tr style="border-bottom: 1px solid #E2E8F0;"><td style="padding: 12px; color: #4A5568; font-weight: 500;">Available Homes</td>'
+    homes_row = "| **Available Homes** | "
     for builder in builders:
         total = data["inventory"].get(builder, {}).get("total_homes", 0)
-        table_html += f'<td style="padding: 12px; text-align: center; color: #2D3748; font-weight: 600;">{total}</td>'
-    table_html += "</tr>"
+        homes_row += f"{total} | "
+    table_md += homes_row + "\n"
 
     # Communities Row
-    table_html += '<tr style="border-bottom: 1px solid #E2E8F0;"><td style="padding: 12px; color: #4A5568; font-weight: 500;">Communities</td>'
+    comm_row = "| **Communities** | "
     for builder in builders:
         communities = data["inventory"].get(builder, {}).get("communities", 0)
-        table_html += f'<td style="padding: 12px; text-align: center; color: #2D3748;">{communities}</td>'
-    table_html += "</tr>"
+        comm_row += f"{communities} | "
+    table_md += comm_row + "\n"
 
     # Avg Price Row
-    table_html += '<tr><td style="padding: 12px; color: #4A5568; font-weight: 500;">Avg Price</td>'
+    price_row = "| **Avg Price** | "
     for builder in builders:
         avg_price = data["pricing"].get(builder, {}).get("avg_price", 0)
         price_display = f"${avg_price:,.0f}" if avg_price else "N/A"
-        table_html += f'<td style="padding: 12px; text-align: center; color: #2D3748;">{price_display}</td>'
-    table_html += "</tr>"
+        price_row += f"{price_display} | "
+    table_md += price_row + "\n"
 
-    table_html += "</tbody></table></div>"
-    return table_html
+    return table_md
 
 
 def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
     """
-    Create inventory statistics cards
+    Create markdown inventory statistics
     """
-    stats_html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">'
+    stats_md = ""
 
     for builder, inventory in inventory_data.items():
         builder_display = builder.replace("dreamfinders", "Dream Finders").title()
@@ -500,19 +478,15 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
         move_in = inventory.get("move_in_ready", 0)
         under_construction = inventory.get("under_construction", 0)
 
-        stats_html += f"""
-        <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <h4 style="margin: 0 0 12px 0; color: #2D3748; font-size: 16px; font-weight: 600;">{builder_display}</h4>
-            <div style="color: #667eea; font-size: 28px; font-weight: 700; margin-bottom: 8px;">{total}</div>
-            <div style="font-size: 12px; color: #718096;">
-                <div style="margin-bottom: 4px;">✅ Move-in Ready: <strong>{move_in}</strong></div>
-                <div>🚧 Under Construction: <strong>{under_construction}</strong></div>
-            </div>
-        </div>
-        """
+        stats_md += f"""
+#### {builder_display}: **{total}** Total Homes
 
-    stats_html += '</div>'
-    return stats_html
+- ✅ **Move-in Ready:** {move_in}
+- 🚧 **Under Construction:** {under_construction}
+
+"""
+
+    return stats_md
 
 
 def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_type: str) -> str:

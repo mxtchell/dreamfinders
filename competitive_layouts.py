@@ -27,7 +27,7 @@ competitive_dashboard_layout = """{
             "isRequired": false,
             "defaultValue": "",
             "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
-        },
+        }
     ],
     "layoutJson": {
         "type": "Document",

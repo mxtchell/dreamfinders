@@ -7,17 +7,35 @@ competitive_dashboard_layout = """{
         {
             "name": "financing_cards_html",
             "isRequired": false,
-            "defaultValue": ""
+            "defaultValue": "",
+            "targets": [
+                {
+                    "elementName": "Financing_Cards",
+                    "fieldName": "html"
+                }
+            ]
         },
         {
             "name": "comparison_table_html",
             "isRequired": false,
-            "defaultValue": ""
+            "defaultValue": "",
+            "targets": [
+                {
+                    "elementName": "Comparison_Table",
+                    "fieldName": "html"
+                }
+            ]
         },
         {
             "name": "inventory_stats_html",
             "isRequired": false,
-            "defaultValue": ""
+            "defaultValue": "",
+            "targets": [
+                {
+                    "elementName": "Inventory_Stats",
+                    "fieldName": "html"
+                }
+            ]
         }
     ],
     "layoutJson": {

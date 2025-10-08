@@ -334,17 +334,8 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
     """
     Create mortgage rate trend chart with builder offers plotted
     """
-    # Hardcoded Freddie Mac 30-year mortgage rates (2024 onwards)
+    # Hardcoded Freddie Mac mortgage rates (Oct 2024 onwards)
     mortgage_30yr = [
-        {"date": "Jan 2024", "rate": 6.67}, {"date": "Jan 2024", "rate": 6.64},
-        {"date": "Feb 2024", "rate": 6.65}, {"date": "Feb 2024", "rate": 6.74},
-        {"date": "Mar 2024", "rate": 6.85}, {"date": "Mar 2024", "rate": 6.88},
-        {"date": "Apr 2024", "rate": 6.95}, {"date": "Apr 2024", "rate": 7.02},
-        {"date": "May 2024", "rate": 7.10}, {"date": "May 2024", "rate": 7.15},
-        {"date": "Jun 2024", "rate": 7.05}, {"date": "Jun 2024", "rate": 6.98},
-        {"date": "Jul 2024", "rate": 6.89}, {"date": "Jul 2024", "rate": 6.82},
-        {"date": "Aug 2024", "rate": 6.75}, {"date": "Aug 2024", "rate": 6.68},
-        {"date": "Sep 2024", "rate": 6.59}, {"date": "Sep 2024", "rate": 6.52},
         {"date": "Oct 2024", "rate": 6.45}, {"date": "Oct 2024", "rate": 6.39},
         {"date": "Nov 2024", "rate": 6.32}, {"date": "Nov 2024", "rate": 6.28},
         {"date": "Dec 2024", "rate": 6.24}, {"date": "Dec 2024", "rate": 6.21},
@@ -361,17 +352,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
         {"date": "Oct 2025", "rate": 6.34}
     ]
 
-    # Hardcoded Freddie Mac 15-year mortgage rates (2024 onwards)
     mortgage_15yr = [
-        {"date": "Jan 2024", "rate": 5.95}, {"date": "Jan 2024", "rate": 5.92},
-        {"date": "Feb 2024", "rate": 5.89}, {"date": "Feb 2024", "rate": 5.98},
-        {"date": "Mar 2024", "rate": 6.08}, {"date": "Mar 2024", "rate": 6.12},
-        {"date": "Apr 2024", "rate": 6.23}, {"date": "Apr 2024", "rate": 6.31},
-        {"date": "May 2024", "rate": 6.42}, {"date": "May 2024", "rate": 6.47},
-        {"date": "Jun 2024", "rate": 6.35}, {"date": "Jun 2024", "rate": 6.29},
-        {"date": "Jul 2024", "rate": 6.21}, {"date": "Jul 2024", "rate": 6.13},
-        {"date": "Aug 2024", "rate": 6.05}, {"date": "Aug 2024", "rate": 5.99},
-        {"date": "Sep 2024", "rate": 5.89}, {"date": "Sep 2024", "rate": 5.84},
         {"date": "Oct 2024", "rate": 5.76}, {"date": "Oct 2024", "rate": 5.71},
         {"date": "Nov 2024", "rate": 5.64}, {"date": "Nov 2024", "rate": 5.61},
         {"date": "Dec 2024", "rate": 5.57}, {"date": "Dec 2024", "rate": 5.53},
@@ -459,7 +440,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Lennar (3.75%)",
                 "type": "scatter",
-                "data": [[43, 3.75]],
+                "data": [[25, 3.75]],  # Sep 2025 index (Oct 2024 is index 0)
                 "color": "#3498db",
                 "marker": {"radius": 11, "symbol": "circle", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10
@@ -467,7 +448,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Meritage (2.99%)",
                 "type": "scatter",
-                "data": [[42, 2.99]],  # Offset x-position to avoid overlap
+                "data": [[24, 2.99]],  # Offset x-position to avoid overlap
                 "color": "#e74c3c",
                 "marker": {"radius": 11, "symbol": "diamond", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10
@@ -475,7 +456,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Dream Finders (2.99%)",
                 "type": "scatter",
-                "data": [[44, 2.99]],  # Offset x-position to avoid overlap
+                "data": [[26, 2.99]],  # Offset x-position to avoid overlap
                 "color": "#9b59b6",
                 "marker": {"radius": 11, "symbol": "square", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10

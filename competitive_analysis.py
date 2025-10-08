@@ -491,12 +491,14 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     Create competitive dashboard with individual builder cards
     """
     print(f"DEBUG: Creating dashboard visualization")
+    print(f"DEBUG: Data keys - financing: {list(data['financing'].keys())}, inventory: {list(data['inventory'].keys())}, pricing: {list(data['pricing'].keys())}")
 
     # Create individual builder cards
     builder_cards = {}
 
-    for builder in ["lennar", "meritage", "dreamfinders", "dream finders", "pulte"]:
+    for builder in ["lennar", "meritage", "dream finders", "pulte"]:
         card_content = create_builder_card(builder, data)
+        print(f"DEBUG: Created card for {builder}: {card_content[:100] if len(card_content) > 100 else card_content}")
 
         # Map to variable names
         if "lennar" in builder.lower():
@@ -507,6 +509,7 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
             builder_cards["dreamfinders_card"] = card_content
         elif "pulte" in builder.lower():
             builder_cards["pulte_card"] = card_content
+            print(f"DEBUG: Pulte card set to: {card_content}")
 
     # Generate mortgage rate chart
     mortgage_chart_dict = create_mortgage_rate_chart()
@@ -542,45 +545,75 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
 
 def generate_insights_narrative(data: Dict[str, Any], insights: Dict[str, Any]) -> str:
     """
-    Generate detailed insights narrative for the narrative section
+    Generate recovery-focused insights for Dream Finders
     """
     narrative_parts = []
 
-    # Best rate comparison
-    if insights.get("best_rate"):
-        best = insights["best_rate"]
-        narrative_parts.append(f"**BEST RATE:** {best['builder'].title()} offers the most competitive financing at {best['rate']}")
+    # Get Dream Finders data
+    df_financing = data["financing"].get("dream finders", {})
+    df_inventory = data["inventory"].get("dream finders", {})
+    df_pricing = data["pricing"].get("dream finders", {})
 
-    # Inventory leader
-    if insights.get("market_leader"):
-        leader = insights["market_leader"]
-        narrative_parts.append(f"**INVENTORY LEADER:** {leader['builder'].title()} has {leader['homes']} homes available, the largest inventory in the market")
+    # Competitive threats
+    narrative_parts.append("## Market Threats\n")
+    threats = []
 
-    # Dream Finders competitive position
-    df_financing = data["financing"].get("dreamfinders") or data["financing"].get("dream finders")
-    if df_financing and df_financing.get("rates"):
-        best_rate = float(insights.get("best_rate", {}).get("rate", "0").replace("%", ""))
+    if insights.get("best_rate") and df_financing.get("rates"):
+        best_rate = float(insights["best_rate"]["rate"].replace("%", ""))
         df_rate = float(df_financing["rates"][0]["rate"].replace("%", ""))
         rate_diff = df_rate - best_rate
-        if rate_diff == 0:
-            narrative_parts.append(f"**COMPETITIVE POSITION:** Dream Finders matches the market-leading rate")
-        elif rate_diff < 1:
-            narrative_parts.append(f"**COMPETITIVE POSITION:** Dream Finders is within {rate_diff:.2f}% of the best market rate")
+
+        if rate_diff > 0:
+            threats.append(f"**Rate disadvantage:** {insights['best_rate']['builder'].title()} undercuts Dream Finders by {rate_diff:.2f}%, making their financing more attractive to price-sensitive buyers")
         else:
-            narrative_parts.append(f"**OPPORTUNITY:** Dream Finders rate is {rate_diff:.2f}% above the market leader")
+            threats.append(f"**Rate parity achieved:** Dream Finders matches the market-leading {df_rate}% rate")
 
-    # Best incentive
+    if insights.get("market_leader") and df_inventory.get("total_homes"):
+        leader = insights["market_leader"]
+        df_homes = df_inventory["total_homes"]
+        inventory_ratio = df_homes / leader["homes"]
+        threats.append(f"**Inventory gap:** {leader['builder'].title()} has {leader['homes']} homes vs. Dream Finders' {df_homes} ({inventory_ratio:.0%} of leader's inventory), limiting buyer choice and market presence")
+
+    narrative_parts.append("\n".join([f"- {t}" for t in threats]))
+
+    # Recovery opportunities
+    narrative_parts.append("\n\n## Recovery Opportunities\n")
+    opportunities = []
+
+    # Rate-based opportunities
+    if insights.get("best_rate") and df_financing.get("rates"):
+        best_rate_val = float(insights["best_rate"]["rate"].replace("%", ""))
+        if df_rate > best_rate_val:
+            savings_needed = int((df_rate - best_rate_val) * 100 * 2500)  # Rough monthly payment impact
+            opportunities.append(f"**Match or beat leading rate:** Lowering to {best_rate_val}% could save buyers ~${savings_needed}/month, improving conversion rates")
+
+    # Incentive opportunities
     if insights.get("best_incentive"):
-        best = insights["best_incentive"]
-        narrative_parts.append(f"**TOP INCENTIVE:** {best['builder'].title()} offers up to {best['amount']} in savings/incentives")
+        best_incentive = insights["best_incentive"]
+        df_incentive_amount = 21000 if df_financing.get("incentives") else 0
+        if df_incentive_amount < 25000:
+            opportunities.append(f"**Increase closing cost assistance:** {best_incentive['builder'].title()} offers {best_incentive['amount']}. Consider matching or exceeding to win buyers on the fence")
 
-    # Recommendations
-    if insights.get("recommendations"):
-        narrative_parts.append("\n**STRATEGIC RECOMMENDATIONS:**")
-        for i, rec in enumerate(insights["recommendations"], 1):
-            narrative_parts.append(f"{i}. {rec}")
+    # Inventory opportunities
+    opportunities.append("**Accelerate move-in ready inventory:** Fast-track spec homes to capture buyers who can't wait for new construction timelines")
+    opportunities.append("**Target underserved price points:** Analyze competitor pricing gaps and develop offerings in underserved segments")
 
-    return "\n\n".join(narrative_parts) if narrative_parts else "Insufficient data for insights"
+    narrative_parts.append("\n".join([f"- {o}" for o in opportunities]))
+
+    # Action plan
+    narrative_parts.append("\n\n## Recommended Actions\n")
+    actions = []
+
+    if df_rate > best_rate_val:
+        actions.append("**Immediate:** Negotiate lender rate buydown to match {:.2f}% within 30 days".format(best_rate_val))
+
+    actions.append("**Short-term:** Launch aggressive Q4 promotion combining rate incentives + closing cost assistance ($25K+)")
+    actions.append("**Medium-term:** Increase spec home production by 40% to close inventory gap with market leaders")
+    actions.append("**Long-term:** Differentiate on value-adds (smart home tech, upgraded finishes, energy efficiency) if rate parity isn't achievable")
+
+    narrative_parts.append("\n".join([f"- {a}" for a in actions]))
+
+    return "\n".join(narrative_parts)
 
 
 def generate_insights_summary(data: Dict[str, Any]) -> str:
@@ -799,29 +832,33 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
 
 def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_type: str) -> str:
     """
-    Format executive narrative summary
+    Format executive narrative summary focused on Dream Finders recovery strategy
     """
-    narrative = "## Competitive Intelligence Summary\n\n"
+    narrative = "## Atlanta Market Competitive Analysis\n\n"
 
-    # Best rate insight
-    if insights.get("best_rate"):
-        best = insights["best_rate"]
-        narrative += f"**Market-Leading Rate:** {best['builder'].title()} offers the most competitive rate at {best['rate']}\n\n"
+    # Get Dream Finders data
+    df_financing = data["financing"].get("dream finders", {})
+    df_inventory = data["inventory"].get("dream finders", {})
+    df_pricing = data["pricing"].get("dream finders", {})
 
-    # Best incentive insight
-    if insights.get("best_incentive"):
-        best = insights["best_incentive"]
-        narrative += f"**Top Incentive:** {best['builder'].title()} provides up to {best['amount']} in savings\n\n"
+    # Competitive gaps analysis
+    if insights.get("best_rate") and df_financing.get("rates"):
+        best_rate = float(insights["best_rate"]["rate"].replace("%", ""))
+        df_rate = float(df_financing["rates"][0]["rate"].replace("%", ""))
+        rate_gap = df_rate - best_rate
 
-    # Market leader insight
-    if insights.get("market_leader"):
-        leader = insights["market_leader"]
-        narrative += f"**Inventory Leader:** {leader['builder'].title()} dominates with {leader['homes']} available homes\n\n"
+        if rate_gap > 0:
+            narrative += f"**Financing Gap:** Dream Finders' {df_rate}% rate is {rate_gap:.2f}% above {insights['best_rate']['builder'].title()}'s market-leading {insights['best_rate']['rate']}. This rate disadvantage is likely impacting buyer conversion.\n\n"
+        else:
+            narrative += f"**Financing Strength:** Dream Finders matches or beats the market with a competitive {df_rate}% rate.\n\n"
 
-    # Recommendations
-    narrative += "### Strategic Recommendations\n\n"
-    for i, rec in enumerate(insights.get("recommendations", []), 1):
-        narrative += f"{i}. {rec}\n"
+    # Inventory position
+    if insights.get("market_leader") and df_inventory.get("total_homes"):
+        leader_homes = insights["market_leader"]["homes"]
+        df_homes = df_inventory["total_homes"]
+        inventory_gap = leader_homes - df_homes
+
+        narrative += f"**Inventory Challenge:** With only {df_homes} homes available vs. {insights['market_leader']['builder'].title()}'s {leader_homes}, Dream Finders has {inventory_gap} fewer units to sell. Limited inventory reduces market visibility and buyer options.\n\n"
 
     return narrative
 

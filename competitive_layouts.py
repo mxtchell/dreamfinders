@@ -110,6 +110,8 @@ competitive_dashboard_layout = """{
                     "margin": "0",
                     "padding": "0"
                 },
+                "minHeight": "0px",
+                "maxHeight": "none",
                 "parentId": "Financing_Section"
             },
             {
@@ -140,6 +142,8 @@ competitive_dashboard_layout = """{
                     "margin": "0",
                     "padding": "0"
                 },
+                "minHeight": "0px",
+                "maxHeight": "none",
                 "parentId": "Table_Section"
             },
             {
@@ -170,6 +174,8 @@ competitive_dashboard_layout = """{
                     "margin": "0",
                     "padding": "0"
                 },
+                "minHeight": "0px",
+                "maxHeight": "none",
                 "parentId": "Inventory_Section"
             }
         ]

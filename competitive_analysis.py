@@ -335,7 +335,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
     Create mortgage rate trend chart with builder offers plotted
     """
     # Hardcoded Freddie Mac 30-year mortgage rates (2024 onwards)
-    mortgage_data = [
+    mortgage_30yr = [
         {"date": "Jan 2024", "rate": 6.67}, {"date": "Jan 2024", "rate": 6.64},
         {"date": "Feb 2024", "rate": 6.65}, {"date": "Feb 2024", "rate": 6.74},
         {"date": "Mar 2024", "rate": 6.85}, {"date": "Mar 2024", "rate": 6.88},
@@ -361,67 +361,124 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
         {"date": "Oct 2025", "rate": 6.34}
     ]
 
-    categories = [d["date"] for d in mortgage_data]
-    rates = [d["rate"] for d in mortgage_data]
+    # Hardcoded Freddie Mac 15-year mortgage rates (2024 onwards)
+    mortgage_15yr = [
+        {"date": "Jan 2024", "rate": 5.95}, {"date": "Jan 2024", "rate": 5.92},
+        {"date": "Feb 2024", "rate": 5.89}, {"date": "Feb 2024", "rate": 5.98},
+        {"date": "Mar 2024", "rate": 6.08}, {"date": "Mar 2024", "rate": 6.12},
+        {"date": "Apr 2024", "rate": 6.23}, {"date": "Apr 2024", "rate": 6.31},
+        {"date": "May 2024", "rate": 6.42}, {"date": "May 2024", "rate": 6.47},
+        {"date": "Jun 2024", "rate": 6.35}, {"date": "Jun 2024", "rate": 6.29},
+        {"date": "Jul 2024", "rate": 6.21}, {"date": "Jul 2024", "rate": 6.13},
+        {"date": "Aug 2024", "rate": 6.05}, {"date": "Aug 2024", "rate": 5.99},
+        {"date": "Sep 2024", "rate": 5.89}, {"date": "Sep 2024", "rate": 5.84},
+        {"date": "Oct 2024", "rate": 5.76}, {"date": "Oct 2024", "rate": 5.71},
+        {"date": "Nov 2024", "rate": 5.64}, {"date": "Nov 2024", "rate": 5.61},
+        {"date": "Dec 2024", "rate": 5.57}, {"date": "Dec 2024", "rate": 5.53},
+        {"date": "Jan 2025", "rate": 6.17}, {"date": "Jan 2025", "rate": 6.14},
+        {"date": "Feb 2025", "rate": 6.11}, {"date": "Feb 2025", "rate": 6.06},
+        {"date": "Mar 2025", "rate": 6.04}, {"date": "Mar 2025", "rate": 6.08},
+        {"date": "Apr 2025", "rate": 6.15}, {"date": "Apr 2025", "rate": 6.18},
+        {"date": "May 2025", "rate": 6.01}, {"date": "May 2025", "rate": 6.03},
+        {"date": "Jun 2025", "rate": 5.99}, {"date": "Jun 2025", "rate": 5.89},
+        {"date": "Jul 2025", "rate": 5.86}, {"date": "Jul 2025", "rate": 5.87},
+        {"date": "Aug 2025", "rate": 5.75}, {"date": "Aug 2025", "rate": 5.69},
+        {"date": "Sep 2025", "rate": 5.60}, {"date": "Sep 2025", "rate": 5.50},
+        {"date": "Sep 2025", "rate": 5.41}, {"date": "Sep 2025", "rate": 5.49},
+        {"date": "Oct 2025", "rate": 5.55}
+    ]
+
+    categories = [d["date"] for d in mortgage_30yr]
+    rates_30yr = [d["rate"] for d in mortgage_30yr]
+    rates_15yr = [d["rate"] for d in mortgage_15yr]
 
     print(f"DEBUG: Mortgage chart - created {len(categories)} data points")
     print(f"DEBUG: First category: {categories[0]}, Last category: {categories[-1]}")
-    print(f"DEBUG: First rate: {rates[0]}, Last rate: {rates[-1]}")
 
     # Create Highcharts configuration with builder offer points
     chart_config = {
-        "chart": {"type": "line", "height": 400, "backgroundColor": "#FAFAFA"},
+        "chart": {"type": "line", "height": 450, "backgroundColor": "#FAFAFA"},
         "title": {
-            "text": "US Weekly Avg Mortgage Rates (30-Year Fixed)",
-            "style": {"fontSize": "18px", "fontWeight": "700", "color": "#2C3E50"}
+            "text": "US Weekly Avg Mortgage Rates",
+            "style": {"fontSize": "20px", "fontWeight": "700", "color": "#2C3E50"}
         },
         "subtitle": {
-            "text": "Source: Freddie Mac | Builder offers shown as points",
-            "style": {"fontSize": "12px", "color": "#7F8C8D"}
+            "text": "Source: Freddie Mac | Builder special offers plotted at Sep 2025",
+            "style": {"fontSize": "13px", "color": "#7F8C8D"}
         },
         "xAxis": {
             "categories": categories,
             "title": {"text": ""},
-            "labels": {"rotation": -45, "style": {"fontSize": "10px"}}
+            "labels": {"rotation": -45, "style": {"fontSize": "10px"}},
+            "gridLineWidth": 1,
+            "gridLineColor": "#e8e8e8"
         },
         "yAxis": {
-            "title": {"text": "Interest Rate (%)", "style": {"fontWeight": "bold"}},
-            "labels": {"format": "{value}%"}
+            "title": {"text": "Interest Rate (%)", "style": {"fontWeight": "600", "fontSize": "13px"}},
+            "labels": {"format": "{value}%"},
+            "gridLineColor": "#e8e8e8",
+            "min": 2.5
         },
         "tooltip": {
-            "shared": True,
+            "shared": False,
             "crosshairs": True,
-            "pointFormat": "<span style=\"color:{series.color}\">\u25CF</span> {series.name}: <b>{point.y}%</b><br/>"
+            "backgroundColor": "#ffffff",
+            "borderColor": "#cccccc",
+            "borderRadius": 8,
+            "style": {"fontSize": "12px"},
+            "pointFormat": "<span style=\"color:{series.color}\">\u25CF</span> <b>{series.name}</b>: {point.y}%<br/>"
         },
-        "legend": {"enabled": True, "align": "center", "verticalAlign": "bottom"},
+        "legend": {
+            "enabled": True,
+            "align": "center",
+            "verticalAlign": "bottom",
+            "itemStyle": {"fontSize": "12px", "fontWeight": "500"}
+        },
+        "plotOptions": {
+            "line": {"lineWidth": 2.5},
+            "scatter": {"marker": {"radius": 10}}
+        },
         "series": [
             {
-                "name": "Market Rate",
-                "data": rates,
+                "name": "30-Year Fixed",
+                "data": rates_30yr,
+                "color": "#7f8c8d",
+                "lineWidth": 2.5,
+                "marker": {"enabled": False},
+                "zIndex": 1
+            },
+            {
+                "name": "15-Year Fixed",
+                "data": rates_15yr,
                 "color": "#95a5a6",
                 "lineWidth": 2,
-                "marker": {"enabled": False}
+                "dashStyle": "ShortDash",
+                "marker": {"enabled": False},
+                "zIndex": 1
             },
             {
-                "name": "Lennar",
+                "name": "Lennar (3.75%)",
                 "type": "scatter",
-                "data": [[43, 3.75]],  # Sep 2025 index, 3.75% rate
+                "data": [[43, 3.75]],
                 "color": "#3498db",
-                "marker": {"radius": 8, "symbol": "circle"}
+                "marker": {"radius": 11, "symbol": "circle", "lineWidth": 2, "lineColor": "#ffffff"},
+                "zIndex": 10
             },
             {
-                "name": "Meritage",
+                "name": "Meritage (2.99%)",
                 "type": "scatter",
-                "data": [[43, 2.99]],  # Sep 2025 index, 2.99% rate
+                "data": [[42, 2.99]],  # Offset x-position to avoid overlap
                 "color": "#e74c3c",
-                "marker": {"radius": 8, "symbol": "diamond"}
+                "marker": {"radius": 11, "symbol": "diamond", "lineWidth": 2, "lineColor": "#ffffff"},
+                "zIndex": 10
             },
             {
-                "name": "Dream Finders",
+                "name": "Dream Finders (2.99%)",
                 "type": "scatter",
-                "data": [[43, 2.99]],  # Sep 2025 index, 2.99% rate
+                "data": [[44, 2.99]],  # Offset x-position to avoid overlap
                 "color": "#9b59b6",
-                "marker": {"radius": 8, "symbol": "square"}
+                "marker": {"radius": 11, "symbol": "square", "lineWidth": 2, "lineColor": "#ffffff"},
+                "zIndex": 10
             }
         ],
         "credits": {"enabled": False}

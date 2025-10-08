@@ -442,7 +442,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "30-Year Fixed",
                 "data": rates_30yr,
-                "color": "#7f8c8d",
+                "color": "#2ecc71",
                 "lineWidth": 2.5,
                 "marker": {"enabled": False},
                 "zIndex": 1
@@ -450,8 +450,8 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "15-Year Fixed",
                 "data": rates_15yr,
-                "color": "#95a5a6",
-                "lineWidth": 2,
+                "color": "#f39c12",
+                "lineWidth": 2.5,
                 "dashStyle": "ShortDash",
                 "marker": {"enabled": False},
                 "zIndex": 1

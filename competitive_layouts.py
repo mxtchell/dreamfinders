@@ -14,7 +14,7 @@ competitive_dashboard_layout = """{
             "name": "lennar_sources",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "Lennar_Sources_HTML", "fieldName": "html"}]
+            "targets": [{"elementName": "Lennar_Sources_HTML", "fieldName": "text"}]
         },
         {
             "name": "meritage_card",
@@ -26,7 +26,7 @@ competitive_dashboard_layout = """{
             "name": "meritage_sources",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "Meritage_Sources_HTML", "fieldName": "html"}]
+            "targets": [{"elementName": "Meritage_Sources_HTML", "fieldName": "text"}]
         },
         {
             "name": "dreamfinders_card",
@@ -38,7 +38,7 @@ competitive_dashboard_layout = """{
             "name": "dreamfinders_sources",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "DreamFinders_Sources_HTML", "fieldName": "html"}]
+            "targets": [{"elementName": "DreamFinders_Sources_HTML", "fieldName": "text"}]
         },
         {
             "name": "pulte_card",
@@ -50,7 +50,7 @@ competitive_dashboard_layout = """{
             "name": "pulte_sources",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "Pulte_Sources_HTML", "fieldName": "html"}]
+            "targets": [{"elementName": "Pulte_Sources_HTML", "fieldName": "text"}]
         },
         {
             "name": "mortgage_chart",

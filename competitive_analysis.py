@@ -440,7 +440,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Lennar (3.75%)",
                 "type": "scatter",
-                "data": [[25, 3.75]],  # Sep 2025 index (Oct 2024 is index 0)
+                "data": [[25, 3.75]],  # Sep 2025 center
                 "color": "#3498db",
                 "marker": {"radius": 11, "symbol": "circle", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10
@@ -448,7 +448,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Meritage (2.99%)",
                 "type": "scatter",
-                "data": [[24, 2.99]],  # Offset x-position to avoid overlap
+                "data": [[24.7, 2.99]],  # Slightly left to avoid overlap
                 "color": "#e74c3c",
                 "marker": {"radius": 11, "symbol": "diamond", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10
@@ -456,7 +456,7 @@ def create_mortgage_rate_chart() -> Dict[str, Any]:
             {
                 "name": "Dream Finders (2.99%)",
                 "type": "scatter",
-                "data": [[26, 2.99]],  # Offset x-position to avoid overlap
+                "data": [[25.3, 2.99]],  # Slightly right to avoid overlap
                 "color": "#9b59b6",
                 "marker": {"radius": 11, "symbol": "square", "lineWidth": 2, "lineColor": "#ffffff"},
                 "zIndex": 10

@@ -682,9 +682,44 @@ def generate_insights_summary(data: Dict[str, Any]) -> str:
     return "\n\n".join(insights) if insights else "Insufficient data for insights"
 
 
+def get_builder_source_links(builder: str) -> List[Dict[str, str]]:
+    """
+    Get document source links for a builder
+    Returns list of dicts with 'title' and 'url' keys
+    """
+    base_url = "https://dreamfinders.poc.answerrocket.com/apps/system/knowledge-base"
+
+    # Map builder to their document IDs and titles
+    builder_docs = {
+        "lennar": [
+            {"title": "Atlanta - Lennar - Current Inventory", "doc_id": "unknown", "file": "New Homes for Sale _ Lennar.pdf"},
+            {"title": "Atlanta - Lennar - Special Financing", "doc_id": "unknown", "file": "Lennar_special_promo_atlanta.pdf"}
+        ],
+        "meritage": [
+            {"title": "Atlanta - Meritage - Current Inventory", "doc_id": "unknown", "file": "New Homes for Sale in Atlanta, GA _ By Meritage Homes.pdf"}
+        ],
+        "dream finders": [
+            {"title": "Atlanta - Dream Finders - Special Offers", "doc_id": "unknown", "file": "Best Deals On Top Homes _ Dream Finders Homes – Atlanta.pdf"},
+            {"title": "Atlanta - Dream Finders - Current Inventory", "doc_id": "unknown", "file": "Atlanta, GA New Homes _ Dream Finders Homes.pdf"}
+        ],
+        "pulte": [
+            {"title": "Atlanta - Pulte - Current Inventory", "doc_id": "unknown", "file": "pulte_atl.pdf"}
+        ]
+    }
+
+    docs = builder_docs.get(builder.lower(), [])
+    links = []
+
+    for doc in docs:
+        url = f"{base_url}/{doc['doc_id']}#page=1"
+        links.append({"title": doc["title"], "url": url})
+
+    return links
+
+
 def create_builder_card(builder: str, data: Dict[str, Any]) -> str:
     """
-    Create card content for a single builder
+    Create card content for a single builder with source links
     """
     financing = data["financing"].get(builder, {})
     inventory = data["inventory"].get(builder, {})
@@ -728,6 +763,15 @@ def create_builder_card(builder: str, data: Dict[str, Any]) -> str:
             pr = pricing["price_range"]
             if pr.get("min") and pr.get("max"):
                 card_text += f"Range: ${pr['min']:,.0f} - ${pr['max']:,.0f}\n"
+
+        card_text += "\n"
+
+    # Add source links (using HTML for clickable links in Paragraph component)
+    source_links = get_builder_source_links(builder)
+    if source_links:
+        card_text += "SOURCES\n"
+        for link in source_links:
+            card_text += f'• <a href="{link["url"]}" target="_blank" style="color: #667eea; text-decoration: none;">{link["title"]}</a>\n'
 
     return card_text.strip() if card_text else "No data available"
 

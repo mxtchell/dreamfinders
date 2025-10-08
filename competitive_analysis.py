@@ -332,23 +332,32 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
     """
     print(f"DEBUG: Creating dashboard visualization")
 
-    # Build HTML for special financing cards
-    financing_cards_html = create_financing_cards(data["financing"])
-    print(f"DEBUG: Financing cards HTML length: {len(financing_cards_html)}")
+    # Build all content into single text block
+    financing_cards = create_financing_cards(data["financing"])
+    comparison_table = create_comparison_table(data)
+    inventory_stats = create_inventory_stats(data["inventory"])
 
-    # Build comparison table
-    comparison_table_html = create_comparison_table(data)
-    print(f"DEBUG: Comparison table HTML length: {len(comparison_table_html)}")
+    # Combine into single content block
+    full_content = f"""CURRENT SPECIAL FINANCING OFFERS
+{'=' * 80}
 
-    # Build inventory stats
-    inventory_stats_html = create_inventory_stats(data["inventory"])
-    print(f"DEBUG: Inventory stats HTML length: {len(inventory_stats_html)}")
+{financing_cards}
+
+BUILDER COMPARISON MATRIX
+{'=' * 80}
+
+{comparison_table}
+
+INVENTORY BREAKDOWN
+{'=' * 80}
+
+{inventory_stats}"""
+
+    print(f"DEBUG: Full content length: {len(full_content)}")
 
     # Create variables dict for wire_layout
     variables = {
-        "financing_cards_html": financing_cards_html,
-        "comparison_table_html": comparison_table_html,
-        "inventory_stats_html": inventory_stats_html
+        "dashboard_content": full_content
     }
 
     print(f"DEBUG: Variables keys: {list(variables.keys())}")
@@ -391,9 +400,10 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
         # Get expiration
         expiration = financing.get("expiration", "Ongoing")
 
-        cards_text += f"{builder_display} - {best_rate} {rate_type}\n"
-        cards_text += f"Incentive: {incentive}\n"
-        cards_text += f"Expires: {expiration}\n\n"
+        cards_text += f"{builder_display}\n"
+        cards_text += f"  Rate: {best_rate} ({rate_type})\n"
+        cards_text += f"  Incentive: {incentive}\n"
+        cards_text += f"  Expires: {expiration}\n\n"
 
     return cards_text
 
@@ -405,48 +415,47 @@ def create_comparison_table(data: Dict[str, Any]) -> str:
     builders = list(data["financing"].keys())
     builder_displays = [b.replace("dreamfinders", "Dream Finders").title() for b in builders]
 
+    # Calculate column widths
+    col_width = 25
+    metric_width = 20
+
     table_text = ""
 
     # Header
-    table_text += "Metric: " + " | ".join(builder_displays) + "\n"
-    table_text += "-" * 80 + "\n"
+    header = "Metric".ljust(metric_width)
+    for builder_name in builder_displays:
+        header += builder_name[:col_width-1].ljust(col_width)
+    table_text += header + "\n"
+    table_text += "-" * (metric_width + col_width * len(builders)) + "\n"
 
     # Best Rate Row
-    rates = []
+    row = "Best Rate".ljust(metric_width)
     for builder in builders:
         rate = data["financing"][builder]["rates"][0]["rate"] if data["financing"][builder].get("rates") else "N/A"
-        rates.append(rate)
-    table_text += "Best Rate: " + " | ".join(rates) + "\n"
-
-    # Incentives Row
-    incentives = []
-    for builder in builders:
-        incentive = data["financing"][builder]["incentives"][0] if data["financing"][builder].get("incentives") else "-"
-        short_inc = incentive[:20] + "..." if len(incentive) > 20 else incentive
-        incentives.append(short_inc)
-    table_text += "Incentives: " + " | ".join(incentives) + "\n"
+        row += rate.ljust(col_width)
+    table_text += row + "\n"
 
     # Total Homes Row
-    homes = []
+    row = "Available Homes".ljust(metric_width)
     for builder in builders:
         total = data["inventory"].get(builder, {}).get("total_homes", 0)
-        homes.append(str(total))
-    table_text += "Available Homes: " + " | ".join(homes) + "\n"
+        row += str(total).ljust(col_width)
+    table_text += row + "\n"
 
     # Communities Row
-    comms = []
+    row = "Communities".ljust(metric_width)
     for builder in builders:
         communities = data["inventory"].get(builder, {}).get("communities", 0)
-        comms.append(str(communities))
-    table_text += "Communities: " + " | ".join(comms) + "\n"
+        row += str(communities).ljust(col_width)
+    table_text += row + "\n"
 
     # Avg Price Row
-    prices = []
+    row = "Avg Price".ljust(metric_width)
     for builder in builders:
         avg_price = data["pricing"].get(builder, {}).get("avg_price", 0)
         price_display = f"${avg_price:,.0f}" if avg_price else "N/A"
-        prices.append(price_display)
-    table_text += "Avg Price: " + " | ".join(prices) + "\n"
+        row += price_display.ljust(col_width)
+    table_text += row + "\n"
 
     return table_text
 
@@ -463,7 +472,8 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
         move_in = inventory.get("move_in_ready", 0)
         under_construction = inventory.get("under_construction", 0)
 
-        stats_text += f"{builder_display}: {total} Total Homes\n"
+        stats_text += f"{builder_display}\n"
+        stats_text += f"  Total Homes: {total}\n"
         stats_text += f"  Move-in Ready: {move_in}\n"
         stats_text += f"  Under Construction: {under_construction}\n\n"
 

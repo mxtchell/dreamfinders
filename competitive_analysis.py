@@ -28,7 +28,7 @@ COMPETITORS = ["lennar", "meritage", "dr horton", "pulte", "dreamfinders", "drea
         SkillParameter(
             name="builder_names",
             description="Comma-separated list of builders to analyze (e.g., 'Lennar, Meritage'). Leave empty for all competitors.",
-            default_value="Lennar, Meritage, Dream Finders"
+            default_value="Lennar, Meritage, Dream Finders, Pulte"
         ),
         SkillParameter(
             name="analysis_type",
@@ -48,7 +48,7 @@ def competitive_analysis(parameters: SkillInput) -> SkillOutput:
     """
 
     # Extract parameters
-    builder_names = parameters.arguments.builder_names or "Lennar, Meritage, Dream Finders"
+    builder_names = parameters.arguments.builder_names or "Lennar, Meritage, Dream Finders, Pulte"
     analysis_type = parameters.arguments.analysis_type or "all"
     region = parameters.arguments.region or "Atlanta"
 
@@ -181,6 +181,15 @@ def extract_financing_data(builder: str, region: str) -> Optional[Dict[str, Any]
         financing_info["incentives"].append("Save up to $21,000 on select homes")
         financing_info["terms"].append("Monthly payments starting as low as $913")
 
+    elif "pulte" in builder.lower():
+        financing_info["rates"].append({
+            "type": "7/6 ARM",
+            "rate": "3.99%",
+            "apr": "5.979%"
+        })
+        financing_info["incentives"].append("Fixed for First 7 Years")
+        financing_info["terms"].append("On Select Move-In Ready Homes")
+
     return financing_info if financing_info["rates"] else None
 
 
@@ -211,6 +220,10 @@ def extract_inventory_data(builder: str, region: str) -> Optional[Dict[str, Any]
     elif "dream" in builder.lower():
         inventory_info["total_homes"] = 25
         inventory_info["move_in_ready"] = 25
+
+    elif "pulte" in builder.lower():
+        inventory_info["total_homes"] = 47
+        inventory_info["communities"] = 47  # "47 Communities in your search"
 
     return inventory_info if inventory_info["total_homes"] > 0 else None
 
@@ -244,6 +257,10 @@ def extract_pricing_data(builder: str, region: str) -> Optional[Dict[str, Any]]:
 
     elif "dream" in builder.lower():
         pricing_info["avg_price"] = 400000  # Sample
+
+    elif "pulte" in builder.lower():
+        pricing_info["price_range"] = {"min": 362990, "max": 529990}
+        pricing_info["avg_price"] = 440000  # Average of range
 
     return pricing_info
 

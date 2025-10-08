@@ -3,7 +3,23 @@ Layout templates for competitive analysis dashboard
 """
 
 competitive_dashboard_layout = """{
-    "inputVariables": ["financing_cards_html", "comparison_table_html", "inventory_stats_html"],
+    "inputVariables": [
+        {
+            "name": "financing_cards_html",
+            "isRequired": false,
+            "defaultValue": ""
+        },
+        {
+            "name": "comparison_table_html",
+            "isRequired": false,
+            "defaultValue": ""
+        },
+        {
+            "name": "inventory_stats_html",
+            "isRequired": false,
+            "defaultValue": ""
+        }
+    ],
     "layoutJson": {
         "type": "Document",
         "gap": "0px",

@@ -61,7 +61,7 @@ competitive_dashboard_layout = """{
             {
                 "name": "Header_Title",
                 "type": "Header",
-                "text": "🏘️ Competitive Intelligence Dashboard",
+                "text": "Competitive Intelligence Dashboard",
                 "style": {
                     "fontSize": "32px",
                     "fontWeight": "700",
@@ -87,18 +87,18 @@ competitive_dashboard_layout = """{
                 "type": "FlexContainer",
                 "direction": "column",
                 "style": {
-                    "padding": "40px"
+                    "padding": "40px 40px 20px 40px"
                 }
             },
             {
                 "name": "Financing_Title",
                 "type": "Header",
-                "text": "💰 Current Special Financing Offers",
+                "text": "Current Special Financing Offers",
                 "style": {
                     "fontSize": "24px",
                     "fontWeight": "600",
                     "color": "#2D3748",
-                    "marginBottom": "20px"
+                    "marginBottom": "10px"
                 },
                 "parentId": "Financing_Section"
             },
@@ -106,6 +106,10 @@ competitive_dashboard_layout = """{
                 "name": "Financing_Cards",
                 "type": "Markdown",
                 "text": "{{financing_cards_html}}",
+                "style": {
+                    "margin": "0",
+                    "padding": "0"
+                },
                 "parentId": "Financing_Section"
             },
             {
@@ -113,18 +117,18 @@ competitive_dashboard_layout = """{
                 "type": "FlexContainer",
                 "direction": "column",
                 "style": {
-                    "padding": "0 40px 40px 40px"
+                    "padding": "0 40px 20px 40px"
                 }
             },
             {
                 "name": "Table_Title",
                 "type": "Header",
-                "text": "📋 Builder Comparison Matrix",
+                "text": "Builder Comparison Matrix",
                 "style": {
                     "fontSize": "24px",
                     "fontWeight": "600",
                     "color": "#2D3748",
-                    "marginBottom": "20px"
+                    "marginBottom": "10px"
                 },
                 "parentId": "Table_Section"
             },
@@ -132,6 +136,10 @@ competitive_dashboard_layout = """{
                 "name": "Comparison_Table",
                 "type": "Markdown",
                 "text": "{{comparison_table_html}}",
+                "style": {
+                    "margin": "0",
+                    "padding": "0"
+                },
                 "parentId": "Table_Section"
             },
             {
@@ -145,12 +153,12 @@ competitive_dashboard_layout = """{
             {
                 "name": "Inventory_Title",
                 "type": "Header",
-                "text": "🏠 Inventory Breakdown",
+                "text": "Inventory Breakdown",
                 "style": {
                     "fontSize": "24px",
                     "fontWeight": "600",
                     "color": "#2D3748",
-                    "marginBottom": "20px"
+                    "marginBottom": "10px"
                 },
                 "parentId": "Inventory_Section"
             },
@@ -158,6 +166,10 @@ competitive_dashboard_layout = """{
                 "name": "Inventory_Stats",
                 "type": "Markdown",
                 "text": "{{inventory_stats_html}}",
+                "style": {
+                    "margin": "0",
+                    "padding": "0"
+                },
                 "parentId": "Inventory_Section"
             }
         ]

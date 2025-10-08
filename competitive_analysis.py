@@ -404,9 +404,9 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
         cards_md += f"""
 ### {builder_display} - **{best_rate}** {rate_type}
 
-💎 **Incentive:** {incentive}
+**Incentive:** {incentive}
 
-⏰ **Expires:** {expiration}
+**Expires:** {expiration}
 
 ---
 
@@ -481,8 +481,8 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
         stats_md += f"""
 #### {builder_display}: **{total}** Total Homes
 
-- ✅ **Move-in Ready:** {move_in}
-- 🚧 **Under Construction:** {under_construction}
+- **Move-in Ready:** {move_in}
+- **Under Construction:** {under_construction}
 
 """
 
@@ -498,17 +498,17 @@ def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_ty
     # Best rate insight
     if insights.get("best_rate"):
         best = insights["best_rate"]
-        narrative += f"**🏆 Market-Leading Rate:** {best['builder'].title()} offers the most competitive rate at {best['rate']}\n\n"
+        narrative += f"**Market-Leading Rate:** {best['builder'].title()} offers the most competitive rate at {best['rate']}\n\n"
 
     # Best incentive insight
     if insights.get("best_incentive"):
         best = insights["best_incentive"]
-        narrative += f"**💰 Top Incentive:** {best['builder'].title()} provides up to {best['amount']} in savings\n\n"
+        narrative += f"**Top Incentive:** {best['builder'].title()} provides up to {best['amount']} in savings\n\n"
 
     # Market leader insight
     if insights.get("market_leader"):
         leader = insights["market_leader"]
-        narrative += f"**📊 Inventory Leader:** {leader['builder'].title()} dominates with {leader['homes']} available homes\n\n"
+        narrative += f"**Inventory Leader:** {leader['builder'].title()} dominates with {leader['homes']} available homes\n\n"
 
     # Recommendations
     narrative += "### Strategic Recommendations\n\n"

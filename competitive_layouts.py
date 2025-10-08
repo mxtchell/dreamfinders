@@ -33,6 +33,12 @@ competitive_dashboard_layout = """{
             "isRequired": false,
             "defaultValue": "",
             "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "insights",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "Insights_Text", "fieldName": "text"}]
         }
     ],
     "layoutJson": {
@@ -293,6 +299,44 @@ competitive_dashboard_layout = """{
                     "whiteSpace": "pre-wrap"
                 },
                 "parentId": "Pulte_Card"
+            },
+            {
+                "name": "Insights_Container",
+                "type": "FlexContainer",
+                "direction": "column",
+                "style": {
+                    "backgroundColor": "#ffffff",
+                    "borderRadius": "12px",
+                    "padding": "32px",
+                    "margin": "0 32px 32px 32px",
+                    "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
+                    "border": "2px solid #e0e0e0"
+                }
+            },
+            {
+                "name": "Insights_Title",
+                "type": "Header",
+                "text": "Market Insights",
+                "style": {
+                    "fontSize": "24px",
+                    "fontWeight": "700",
+                    "color": "#1a1a1a",
+                    "margin": "0 0 16px 0"
+                },
+                "parentId": "Insights_Container"
+            },
+            {
+                "name": "Insights_Text",
+                "type": "Paragraph",
+                "text": "{{insights}}",
+                "style": {
+                    "fontSize": "16px",
+                    "lineHeight": "1.8",
+                    "color": "#333333",
+                    "margin": "0",
+                    "whiteSpace": "pre-wrap"
+                },
+                "parentId": "Insights_Container"
             }
         ]
     }

@@ -350,13 +350,17 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         elif "pulte" in builder.lower():
             builder_cards["pulte_card"] = card_content
 
+    # Generate insights summary
+    insights_text = generate_insights_summary(data)
+
     # Ensure all cards have values
     variables = {
         "lennar_card": builder_cards.get("lennar_card", "No data available"),
         "meritage_card": builder_cards.get("meritage_card", "No data available"),
         "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
         "drhorton_card": builder_cards.get("drhorton_card", "No data available"),
-        "pulte_card": builder_cards.get("pulte_card", "No data available")
+        "pulte_card": builder_cards.get("pulte_card", "No data available"),
+        "insights": insights_text
     }
 
     print(f"DEBUG: Variables created for {len(variables)} builders")
@@ -374,6 +378,67 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         title="Competitive Analysis",
         layout=rendered
     )
+
+
+def generate_insights_summary(data: Dict[str, Any]) -> str:
+    """
+    Generate key insights summary from competitive data
+    """
+    insights = []
+
+    # Best rate comparison
+    best_rate = float('inf')
+    best_rate_builder = None
+    for builder, financing in data["financing"].items():
+        if financing.get("rates"):
+            rate_val = float(financing["rates"][0]["rate"].replace("%", ""))
+            if rate_val < best_rate:
+                best_rate = rate_val
+                best_rate_builder = builder.replace("dreamfinders", "Dream Finders").title()
+
+    if best_rate_builder:
+        insights.append(f"BEST RATE: {best_rate_builder} offers the most competitive financing at {best_rate}%")
+
+    # Inventory leader
+    max_inventory = 0
+    inventory_leader = None
+    for builder, inventory in data["inventory"].items():
+        total = inventory.get("total_homes", 0)
+        if total > max_inventory:
+            max_inventory = total
+            inventory_leader = builder.replace("dreamfinders", "Dream Finders").title()
+
+    if inventory_leader:
+        insights.append(f"INVENTORY LEADER: {inventory_leader} has {max_inventory} homes available, the largest inventory in the market")
+
+    # Dream Finders competitive position
+    df_financing = data["financing"].get("dreamfinders") or data["financing"].get("dream finders")
+    if df_financing and df_financing.get("rates"):
+        df_rate = float(df_financing["rates"][0]["rate"].replace("%", ""))
+        rate_diff = df_rate - best_rate
+        if rate_diff == 0:
+            insights.append(f"COMPETITIVE POSITION: Dream Finders matches the market-leading rate")
+        elif rate_diff < 1:
+            insights.append(f"COMPETITIVE POSITION: Dream Finders is within {rate_diff:.2f}% of the best market rate")
+        else:
+            insights.append(f"OPPORTUNITY: Dream Finders rate is {rate_diff:.2f}% above the market leader")
+
+    # Incentive comparison
+    max_incentive = 0
+    max_incentive_builder = None
+    for builder, financing in data["financing"].items():
+        for incentive_text in financing.get("incentives", []):
+            amounts = re.findall(r'\$?(\d{1,3}(?:,\d{3})*(?:K)?)', incentive_text)
+            for amount in amounts:
+                val = parse_dollar_amount(amount)
+                if val > max_incentive:
+                    max_incentive = val
+                    max_incentive_builder = builder.replace("dreamfinders", "Dream Finders").title()
+
+    if max_incentive_builder:
+        insights.append(f"TOP INCENTIVE: {max_incentive_builder} offers up to ${max_incentive:,.0f} in savings/incentives")
+
+    return "\n\n".join(insights) if insights else "Insufficient data for insights"
 
 
 def create_builder_card(builder: str, data: Dict[str, Any]) -> str:

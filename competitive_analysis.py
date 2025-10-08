@@ -328,39 +328,62 @@ def parse_dollar_amount(amount_str: str) -> float:
 
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
     """
-    Create badass dashboard visualization using wire_layout
+    Create professional dashboard visualization with metric cards
     """
     print(f"DEBUG: Creating dashboard visualization")
 
-    # Build all content into single text block
-    financing_cards = create_financing_cards(data["financing"])
+    # Calculate key metrics
+    market_leader = None
+    max_homes = 0
+    for builder, inv in data["inventory"].items():
+        total = inv.get("total_homes", 0)
+        if total > max_homes:
+            max_homes = total
+            market_leader = builder.replace("dreamfinders", "Dream Finders").title()
+
+    # Find best rate
+    best_rate = "N/A"
+    best_rate_val = float('inf')
+    for builder, financing in data["financing"].items():
+        if financing.get("rates"):
+            rate_str = financing["rates"][0]["rate"]
+            rate_val = float(rate_str.replace("%", ""))
+            if rate_val < best_rate_val:
+                best_rate_val = rate_val
+                best_rate = rate_str
+
+    # Calculate total homes across all builders
+    total_homes = sum(inv.get("total_homes", 0) for inv in data["inventory"].values())
+
+    # Find best incentive
+    best_incentive = "$0"
+    max_incentive = 0
+    for builder, financing in data["financing"].items():
+        for incentive_text in financing.get("incentives", []):
+            amounts = re.findall(r'\$?(\\d{1,3}(?:,\\d{3})*(?:K)?)', incentive_text)
+            for amount in amounts:
+                val = parse_dollar_amount(amount)
+                if val > max_incentive:
+                    max_incentive = val
+                    best_incentive = f"${max_incentive:,.0f}"
+
+    # Generate detail sections
+    financing_details = create_financing_cards(data["financing"])
     comparison_table = create_comparison_table(data)
-    inventory_stats = create_inventory_stats(data["inventory"])
-
-    # Combine into single content block
-    full_content = f"""CURRENT SPECIAL FINANCING OFFERS
-{'=' * 80}
-
-{financing_cards}
-
-BUILDER COMPARISON MATRIX
-{'=' * 80}
-
-{comparison_table}
-
-INVENTORY BREAKDOWN
-{'=' * 80}
-
-{inventory_stats}"""
-
-    print(f"DEBUG: Full content length: {len(full_content)}")
+    inventory_details = create_inventory_stats(data["inventory"])
 
     # Create variables dict for wire_layout
     variables = {
-        "dashboard_content": full_content
+        "market_leader": market_leader or "N/A",
+        "best_rate": best_rate,
+        "total_homes": str(total_homes),
+        "avg_incentive": best_incentive,
+        "financing_details": financing_details,
+        "comparison_table": comparison_table,
+        "inventory_details": inventory_details
     }
 
-    print(f"DEBUG: Variables keys: {list(variables.keys())}")
+    print(f"DEBUG: Variables: {variables}")
 
     # Parse layout JSON
     import json
@@ -369,7 +392,7 @@ INVENTORY BREAKDOWN
 
     # Render using wire_layout
     rendered = wire_layout(layout_dict, variables)
-    print(f"DEBUG: Layout rendered successfully, type: {type(rendered)}")
+    print(f"DEBUG: Layout rendered successfully")
 
     return SkillVisualization(
         title="Competitive Analysis",
@@ -379,7 +402,7 @@ INVENTORY BREAKDOWN
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:
     """
-    Create simple text-formatted financing offer cards
+    Create formatted financing offer details
     """
     cards_text = ""
 
@@ -401,11 +424,11 @@ def create_financing_cards(financing_data: Dict[str, Any]) -> str:
         expiration = financing.get("expiration", "Ongoing")
 
         cards_text += f"{builder_display}\n"
-        cards_text += f"  Rate: {best_rate} ({rate_type})\n"
-        cards_text += f"  Incentive: {incentive}\n"
+        cards_text += f"  {best_rate} {rate_type}\n"
+        cards_text += f"  {incentive}\n"
         cards_text += f"  Expires: {expiration}\n\n"
 
-    return cards_text
+    return cards_text.strip()
 
 
 def create_comparison_table(data: Dict[str, Any]) -> str:
@@ -462,7 +485,7 @@ def create_comparison_table(data: Dict[str, Any]) -> str:
 
 def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
     """
-    Create simple text inventory statistics
+    Create formatted inventory statistics
     """
     stats_text = ""
 
@@ -471,13 +494,13 @@ def create_inventory_stats(inventory_data: Dict[str, Any]) -> str:
         total = inventory.get("total_homes", 0)
         move_in = inventory.get("move_in_ready", 0)
         under_construction = inventory.get("under_construction", 0)
+        communities = inventory.get("communities", 0)
 
         stats_text += f"{builder_display}\n"
-        stats_text += f"  Total Homes: {total}\n"
-        stats_text += f"  Move-in Ready: {move_in}\n"
-        stats_text += f"  Under Construction: {under_construction}\n\n"
+        stats_text += f"  {total} homes available across {communities} communities\n"
+        stats_text += f"  {move_in} move-in ready, {under_construction} under construction\n\n"
 
-    return stats_text
+    return stats_text.strip()
 
 
 def format_narrative(data: Dict[str, Any], insights: Dict[str, Any], analysis_type: str) -> str:

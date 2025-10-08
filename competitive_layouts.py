@@ -175,8 +175,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Lennar_Sources_HTML",
-                "type": "HTML",
-                "html": "{{lennar_sources}}",
+                "type": "Paragraph",
+                "text": "{{lennar_sources}}",
                 "parentId": "Lennar_Card"
             },
             {
@@ -222,8 +222,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Meritage_Sources_HTML",
-                "type": "HTML",
-                "html": "{{meritage_sources}}",
+                "type": "Paragraph",
+                "text": "{{meritage_sources}}",
                 "parentId": "Meritage_Card"
             },
             {
@@ -269,8 +269,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "DreamFinders_Sources_HTML",
-                "type": "HTML",
-                "html": "{{dreamfinders_sources}}",
+                "type": "Paragraph",
+                "text": "{{dreamfinders_sources}}",
                 "parentId": "DreamFinders_Card"
             },
             {
@@ -316,8 +316,8 @@ competitive_dashboard_layout = """{
             },
             {
                 "name": "Pulte_Sources_HTML",
-                "type": "HTML",
-                "html": "{{pulte_sources}}",
+                "type": "Paragraph",
+                "text": "{{pulte_sources}}",
                 "parentId": "Pulte_Card"
             }
         ]

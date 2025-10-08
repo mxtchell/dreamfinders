@@ -112,9 +112,9 @@ competitive_dashboard_layout = """{
                     "fontSize": "28px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
-                    "margin": "0 0 20px 0",
+                    "margin": "0 0 8px 0",
                     "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "12px"
+                    "paddingBottom": "8px"
                 },
                 "parentId": "Lennar_Card"
             },
@@ -154,9 +154,9 @@ competitive_dashboard_layout = """{
                     "fontSize": "28px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
-                    "margin": "0 0 20px 0",
+                    "margin": "0 0 8px 0",
                     "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "12px"
+                    "paddingBottom": "8px"
                 },
                 "parentId": "Meritage_Card"
             },
@@ -196,9 +196,9 @@ competitive_dashboard_layout = """{
                     "fontSize": "28px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
-                    "margin": "0 0 20px 0",
+                    "margin": "0 0 8px 0",
                     "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "12px"
+                    "paddingBottom": "8px"
                 },
                 "parentId": "DreamFinders_Card"
             },
@@ -238,9 +238,9 @@ competitive_dashboard_layout = """{
                     "fontSize": "28px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
-                    "margin": "0 0 20px 0",
+                    "margin": "0 0 8px 0",
                     "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "12px"
+                    "paddingBottom": "8px"
                 },
                 "parentId": "DRHorton_Card"
             },
@@ -280,9 +280,9 @@ competitive_dashboard_layout = """{
                     "fontSize": "28px",
                     "fontWeight": "700",
                     "color": "#1a1a1a",
-                    "margin": "0 0 20px 0",
+                    "margin": "0 0 8px 0",
                     "borderBottom": "3px solid #667eea",
-                    "paddingBottom": "12px"
+                    "paddingBottom": "8px"
                 },
                 "parentId": "Pulte_Card"
             },

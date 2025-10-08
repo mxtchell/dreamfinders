@@ -328,62 +328,38 @@ def parse_dollar_amount(amount_str: str) -> float:
 
 def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> SkillVisualization:
     """
-    Create professional dashboard visualization with metric cards
+    Create competitive dashboard with individual builder cards
     """
     print(f"DEBUG: Creating dashboard visualization")
 
-    # Calculate key metrics
-    market_leader = None
-    max_homes = 0
-    for builder, inv in data["inventory"].items():
-        total = inv.get("total_homes", 0)
-        if total > max_homes:
-            max_homes = total
-            market_leader = builder.replace("dreamfinders", "Dream Finders").title()
+    # Create individual builder cards
+    builder_cards = {}
 
-    # Find best rate
-    best_rate = "N/A"
-    best_rate_val = float('inf')
-    for builder, financing in data["financing"].items():
-        if financing.get("rates"):
-            rate_str = financing["rates"][0]["rate"]
-            rate_val = float(rate_str.replace("%", ""))
-            if rate_val < best_rate_val:
-                best_rate_val = rate_val
-                best_rate = rate_str
+    for builder in ["lennar", "meritage", "dreamfinders", "dream finders", "dr horton", "pulte"]:
+        card_content = create_builder_card(builder, data)
 
-    # Calculate total homes across all builders
-    total_homes = sum(inv.get("total_homes", 0) for inv in data["inventory"].values())
+        # Map to variable names
+        if "lennar" in builder.lower():
+            builder_cards["lennar_card"] = card_content
+        elif "meritage" in builder.lower():
+            builder_cards["meritage_card"] = card_content
+        elif "dream" in builder.lower():
+            builder_cards["dreamfinders_card"] = card_content
+        elif "horton" in builder.lower():
+            builder_cards["drhorton_card"] = card_content
+        elif "pulte" in builder.lower():
+            builder_cards["pulte_card"] = card_content
 
-    # Find best incentive
-    best_incentive = "$0"
-    max_incentive = 0
-    for builder, financing in data["financing"].items():
-        for incentive_text in financing.get("incentives", []):
-            amounts = re.findall(r'\$?(\\d{1,3}(?:,\\d{3})*(?:K)?)', incentive_text)
-            for amount in amounts:
-                val = parse_dollar_amount(amount)
-                if val > max_incentive:
-                    max_incentive = val
-                    best_incentive = f"${max_incentive:,.0f}"
-
-    # Generate detail sections
-    financing_details = create_financing_cards(data["financing"])
-    comparison_table = create_comparison_table(data)
-    inventory_details = create_inventory_stats(data["inventory"])
-
-    # Create variables dict for wire_layout
+    # Ensure all cards have values
     variables = {
-        "market_leader": market_leader or "N/A",
-        "best_rate": best_rate,
-        "total_homes": str(total_homes),
-        "avg_incentive": best_incentive,
-        "financing_details": financing_details,
-        "comparison_table": comparison_table,
-        "inventory_details": inventory_details
+        "lennar_card": builder_cards.get("lennar_card", "No data available"),
+        "meritage_card": builder_cards.get("meritage_card", "No data available"),
+        "dreamfinders_card": builder_cards.get("dreamfinders_card", "No data available"),
+        "drhorton_card": builder_cards.get("drhorton_card", "No data available"),
+        "pulte_card": builder_cards.get("pulte_card", "No data available")
     }
 
-    print(f"DEBUG: Variables: {variables}")
+    print(f"DEBUG: Variables created for {len(variables)} builders")
 
     # Parse layout JSON
     import json
@@ -398,6 +374,56 @@ def create_competitive_dashboard(data: Dict[str, Any], analysis_type: str) -> Sk
         title="Competitive Analysis",
         layout=rendered
     )
+
+
+def create_builder_card(builder: str, data: Dict[str, Any]) -> str:
+    """
+    Create card content for a single builder
+    """
+    financing = data["financing"].get(builder, {})
+    inventory = data["inventory"].get(builder, {})
+    pricing = data["pricing"].get(builder, {})
+
+    card_text = ""
+
+    # Financing section
+    if financing.get("rates"):
+        rate_info = financing["rates"][0]
+        card_text += f"FINANCING\n"
+        card_text += f"{rate_info.get('rate', 'N/A')} {rate_info.get('type', '')}\n"
+
+        if financing.get("incentives"):
+            card_text += f"{financing['incentives'][0]}\n"
+
+        if financing.get("expiration"):
+            card_text += f"Expires: {financing['expiration']}\n"
+
+        card_text += "\n"
+
+    # Inventory section
+    if inventory.get("total_homes"):
+        card_text += f"INVENTORY\n"
+        card_text += f"{inventory['total_homes']} homes available\n"
+
+        if inventory.get("move_in_ready"):
+            card_text += f"{inventory['move_in_ready']} move-in ready\n"
+
+        if inventory.get("communities"):
+            card_text += f"{inventory['communities']} communities\n"
+
+        card_text += "\n"
+
+    # Pricing section
+    if pricing.get("avg_price"):
+        card_text += f"PRICING\n"
+        card_text += f"Avg: ${pricing['avg_price']:,.0f}\n"
+
+        if pricing.get("price_range"):
+            pr = pricing["price_range"]
+            if pr.get("min") and pr.get("max"):
+                card_text += f"Range: ${pr['min']:,.0f} - ${pr['max']:,.0f}\n"
+
+    return card_text.strip() if card_text else "No data available"
 
 
 def create_financing_cards(financing_data: Dict[str, Any]) -> str:

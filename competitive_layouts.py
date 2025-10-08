@@ -5,52 +5,40 @@ Layout templates for competitive analysis dashboard
 competitive_dashboard_layout = """{
     "inputVariables": [
         {
-            "name": "market_leader",
-            "isRequired": false,
-            "defaultValue": "N/A",
-            "targets": [{"elementName": "MarketLeader_Value", "fieldName": "text"}]
-        },
-        {
-            "name": "best_rate",
-            "isRequired": false,
-            "defaultValue": "N/A",
-            "targets": [{"elementName": "BestRate_Value", "fieldName": "text"}]
-        },
-        {
-            "name": "total_homes",
-            "isRequired": false,
-            "defaultValue": "0",
-            "targets": [{"elementName": "TotalHomes_Value", "fieldName": "text"}]
-        },
-        {
-            "name": "avg_incentive",
-            "isRequired": false,
-            "defaultValue": "$0",
-            "targets": [{"elementName": "AvgIncentive_Value", "fieldName": "text"}]
-        },
-        {
-            "name": "financing_details",
+            "name": "lennar_card",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "FinancingDetails_Text", "fieldName": "text"}]
+            "targets": [{"elementName": "Lennar_Card_Text", "fieldName": "text"}]
         },
         {
-            "name": "comparison_table",
+            "name": "meritage_card",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "ComparisonTable_Text", "fieldName": "text"}]
+            "targets": [{"elementName": "Meritage_Card_Text", "fieldName": "text"}]
         },
         {
-            "name": "inventory_details",
+            "name": "dreamfinders_card",
             "isRequired": false,
             "defaultValue": "",
-            "targets": [{"elementName": "InventoryDetails_Text", "fieldName": "text"}]
+            "targets": [{"elementName": "DreamFinders_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "drhorton_card",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "DRHorton_Card_Text", "fieldName": "text"}]
+        },
+        {
+            "name": "pulte_card",
+            "isRequired": false,
+            "defaultValue": "",
+            "targets": [{"elementName": "Pulte_Card_Text", "fieldName": "text"}]
         }
     ],
     "layoutJson": {
         "type": "Document",
         "style": {
-            "backgroundColor": "#f8f9fa",
+            "backgroundColor": "#f5f7fa",
             "width": "100%",
             "padding": "0px"
         },
@@ -59,331 +47,258 @@ competitive_dashboard_layout = """{
                 "name": "Header_Container",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "80px",
+                "minHeight": "70px",
                 "style": {
-                    "background": "linear-gradient(135deg, #4A90E2 0%, #357ABD 100%)",
-                    "padding": "24px 32px",
-                    "marginBottom": "24px",
-                    "boxShadow": "0 2px 4px rgba(0,0,0,0.1)"
+                    "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "padding": "20px 24px",
+                    "marginBottom": "20px"
                 }
             },
             {
                 "name": "Header_Title",
                 "type": "Header",
-                "text": "Competitive Intelligence Dashboard",
+                "text": "Atlanta Homebuilder Competitive Analysis",
                 "style": {
-                    "fontSize": "32px",
+                    "fontSize": "26px",
                     "fontWeight": "600",
                     "color": "#ffffff",
-                    "margin": "0",
-                    "letterSpacing": "-0.5px"
+                    "margin": "0"
                 },
                 "parentId": "Header_Container"
             },
             {
                 "name": "Header_Subtitle",
                 "type": "Paragraph",
-                "text": "Atlanta Homebuilder Market Analysis",
+                "text": "Special Financing, Inventory & Pricing Comparison",
                 "style": {
-                    "fontSize": "16px",
+                    "fontSize": "14px",
                     "color": "#ffffff",
-                    "opacity": "0.95",
-                    "margin": "8px 0 0 0",
-                    "fontWeight": "400"
+                    "opacity": "0.9",
+                    "margin": "6px 0 0 0"
                 },
                 "parentId": "Header_Container"
             },
             {
-                "name": "MetricsRow_Container",
+                "name": "CardsRow_Container",
                 "type": "FlexContainer",
                 "direction": "row",
-                "minHeight": "120px",
+                "minHeight": "200px",
                 "style": {
-                    "padding": "0 32px",
-                    "gap": "16px",
-                    "marginBottom": "24px"
+                    "padding": "0 24px",
+                    "gap": "20px",
+                    "marginBottom": "24px",
+                    "flexWrap": "wrap"
                 }
             },
             {
-                "name": "MarketLeader_Card",
+                "name": "Lennar_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100px",
+                "minHeight": "180px",
                 "style": {
-                    "flex": "1",
-                    "backgroundColor": "#E3F2FD",
-                    "borderRadius": "8px",
-                    "padding": "20px",
-                    "borderLeft": "4px solid #2196F3",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                },
-                "parentId": "MetricsRow_Container"
-            },
-            {
-                "name": "MarketLeader_Label",
-                "type": "Paragraph",
-                "text": "Market Leader",
-                "style": {
-                    "fontSize": "13px",
-                    "fontWeight": "600",
-                    "color": "#546e7a",
-                    "margin": "0 0 8px 0",
-                    "textTransform": "uppercase",
-                    "letterSpacing": "0.5px"
-                },
-                "parentId": "MarketLeader_Card"
-            },
-            {
-                "name": "MarketLeader_Value",
-                "type": "Paragraph",
-                "text": "{{market_leader}}",
-                "style": {
-                    "fontSize": "28px",
-                    "fontWeight": "700",
-                    "color": "#1565C0",
-                    "margin": "0"
-                },
-                "parentId": "MarketLeader_Card"
-            },
-            {
-                "name": "BestRate_Card",
-                "type": "FlexContainer",
-                "direction": "column",
-                "minHeight": "100px",
-                "style": {
-                    "flex": "1",
-                    "backgroundColor": "#E8F5E9",
-                    "borderRadius": "8px",
-                    "padding": "20px",
-                    "borderLeft": "4px solid #4CAF50",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                },
-                "parentId": "MetricsRow_Container"
-            },
-            {
-                "name": "BestRate_Label",
-                "type": "Paragraph",
-                "text": "Best Rate",
-                "style": {
-                    "fontSize": "13px",
-                    "fontWeight": "600",
-                    "color": "#546e7a",
-                    "margin": "0 0 8px 0",
-                    "textTransform": "uppercase",
-                    "letterSpacing": "0.5px"
-                },
-                "parentId": "BestRate_Card"
-            },
-            {
-                "name": "BestRate_Value",
-                "type": "Paragraph",
-                "text": "{{best_rate}}",
-                "style": {
-                    "fontSize": "28px",
-                    "fontWeight": "700",
-                    "color": "#2E7D32",
-                    "margin": "0"
-                },
-                "parentId": "BestRate_Card"
-            },
-            {
-                "name": "TotalHomes_Card",
-                "type": "FlexContainer",
-                "direction": "column",
-                "minHeight": "100px",
-                "style": {
-                    "flex": "1",
-                    "backgroundColor": "#FFF3E0",
-                    "borderRadius": "8px",
-                    "padding": "20px",
-                    "borderLeft": "4px solid #FF9800",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                },
-                "parentId": "MetricsRow_Container"
-            },
-            {
-                "name": "TotalHomes_Label",
-                "type": "Paragraph",
-                "text": "Total Homes",
-                "style": {
-                    "fontSize": "13px",
-                    "fontWeight": "600",
-                    "color": "#546e7a",
-                    "margin": "0 0 8px 0",
-                    "textTransform": "uppercase",
-                    "letterSpacing": "0.5px"
-                },
-                "parentId": "TotalHomes_Card"
-            },
-            {
-                "name": "TotalHomes_Value",
-                "type": "Paragraph",
-                "text": "{{total_homes}}",
-                "style": {
-                    "fontSize": "28px",
-                    "fontWeight": "700",
-                    "color": "#E65100",
-                    "margin": "0"
-                },
-                "parentId": "TotalHomes_Card"
-            },
-            {
-                "name": "AvgIncentive_Card",
-                "type": "FlexContainer",
-                "direction": "column",
-                "minHeight": "100px",
-                "style": {
-                    "flex": "1",
-                    "backgroundColor": "#F3E5F5",
-                    "borderRadius": "8px",
-                    "padding": "20px",
-                    "borderLeft": "4px solid #9C27B0",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                },
-                "parentId": "MetricsRow_Container"
-            },
-            {
-                "name": "AvgIncentive_Label",
-                "type": "Paragraph",
-                "text": "Best Incentive",
-                "style": {
-                    "fontSize": "13px",
-                    "fontWeight": "600",
-                    "color": "#546e7a",
-                    "margin": "0 0 8px 0",
-                    "textTransform": "uppercase",
-                    "letterSpacing": "0.5px"
-                },
-                "parentId": "AvgIncentive_Card"
-            },
-            {
-                "name": "AvgIncentive_Value",
-                "type": "Paragraph",
-                "text": "{{avg_incentive}}",
-                "style": {
-                    "fontSize": "28px",
-                    "fontWeight": "700",
-                    "color": "#6A1B9A",
-                    "margin": "0"
-                },
-                "parentId": "AvgIncentive_Card"
-            },
-            {
-                "name": "FinancingSection_Container",
-                "type": "FlexContainer",
-                "direction": "column",
-                "minHeight": "100px",
-                "style": {
+                    "flex": "1 1 300px",
                     "backgroundColor": "#ffffff",
                     "borderRadius": "8px",
-                    "padding": "24px",
-                    "margin": "0 32px 24px 32px",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                }
+                    "padding": "20px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                },
+                "parentId": "CardsRow_Container"
             },
             {
-                "name": "FinancingSection_Header",
+                "name": "Lennar_Card_Title",
                 "type": "Header",
-                "text": "Current Special Financing Offers",
+                "text": "Lennar",
                 "style": {
                     "fontSize": "20px",
                     "fontWeight": "600",
-                    "color": "#212121",
-                    "margin": "0 0 16px 0"
+                    "color": "#1a1a1a",
+                    "margin": "0 0 12px 0",
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "8px"
                 },
-                "parentId": "FinancingSection_Container"
+                "parentId": "Lennar_Card"
             },
             {
-                "name": "FinancingDetails_Text",
+                "name": "Lennar_Card_Text",
                 "type": "Paragraph",
-                "text": "{{financing_details}}",
+                "text": "{{lennar_card}}",
                 "style": {
                     "fontSize": "14px",
-                    "lineHeight": "1.8",
-                    "color": "#424242",
-                    "margin": "0",
-                    "whiteSpace": "pre-wrap",
-                    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-                },
-                "parentId": "FinancingSection_Container"
-            },
-            {
-                "name": "ComparisonSection_Container",
-                "type": "FlexContainer",
-                "direction": "column",
-                "minHeight": "100px",
-                "style": {
-                    "backgroundColor": "#ffffff",
-                    "borderRadius": "8px",
-                    "padding": "24px",
-                    "margin": "0 32px 24px 32px",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                }
-            },
-            {
-                "name": "ComparisonSection_Header",
-                "type": "Header",
-                "text": "Builder Comparison Matrix",
-                "style": {
-                    "fontSize": "20px",
-                    "fontWeight": "600",
-                    "color": "#212121",
-                    "margin": "0 0 16px 0"
-                },
-                "parentId": "ComparisonSection_Container"
-            },
-            {
-                "name": "ComparisonTable_Text",
-                "type": "Paragraph",
-                "text": "{{comparison_table}}",
-                "style": {
-                    "fontSize": "13px",
                     "lineHeight": "1.6",
                     "color": "#424242",
                     "margin": "0",
-                    "whiteSpace": "pre-wrap",
-                    "fontFamily": "Consolas, Monaco, 'Courier New', monospace"
+                    "whiteSpace": "pre-wrap"
                 },
-                "parentId": "ComparisonSection_Container"
+                "parentId": "Lennar_Card"
             },
             {
-                "name": "InventorySection_Container",
+                "name": "Meritage_Card",
                 "type": "FlexContainer",
                 "direction": "column",
-                "minHeight": "100px",
+                "minHeight": "180px",
                 "style": {
+                    "flex": "1 1 300px",
                     "backgroundColor": "#ffffff",
                     "borderRadius": "8px",
-                    "padding": "24px",
-                    "margin": "0 32px 32px 32px",
-                    "boxShadow": "0 1px 3px rgba(0,0,0,0.1)"
-                }
+                    "padding": "20px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                },
+                "parentId": "CardsRow_Container"
             },
             {
-                "name": "InventorySection_Header",
+                "name": "Meritage_Card_Title",
                 "type": "Header",
-                "text": "Inventory Breakdown",
+                "text": "Meritage",
                 "style": {
                     "fontSize": "20px",
                     "fontWeight": "600",
-                    "color": "#212121",
-                    "margin": "0 0 16px 0"
+                    "color": "#1a1a1a",
+                    "margin": "0 0 12px 0",
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "8px"
                 },
-                "parentId": "InventorySection_Container"
+                "parentId": "Meritage_Card"
             },
             {
-                "name": "InventoryDetails_Text",
+                "name": "Meritage_Card_Text",
                 "type": "Paragraph",
-                "text": "{{inventory_details}}",
+                "text": "{{meritage_card}}",
                 "style": {
                     "fontSize": "14px",
-                    "lineHeight": "1.8",
+                    "lineHeight": "1.6",
                     "color": "#424242",
                     "margin": "0",
-                    "whiteSpace": "pre-wrap",
-                    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                    "whiteSpace": "pre-wrap"
                 },
-                "parentId": "InventorySection_Container"
+                "parentId": "Meritage_Card"
+            },
+            {
+                "name": "DreamFinders_Card",
+                "type": "FlexContainer",
+                "direction": "column",
+                "minHeight": "180px",
+                "style": {
+                    "flex": "1 1 300px",
+                    "backgroundColor": "#ffffff",
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                },
+                "parentId": "CardsRow_Container"
+            },
+            {
+                "name": "DreamFinders_Card_Title",
+                "type": "Header",
+                "text": "Dream Finders",
+                "style": {
+                    "fontSize": "20px",
+                    "fontWeight": "600",
+                    "color": "#1a1a1a",
+                    "margin": "0 0 12px 0",
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "8px"
+                },
+                "parentId": "DreamFinders_Card"
+            },
+            {
+                "name": "DreamFinders_Card_Text",
+                "type": "Paragraph",
+                "text": "{{dreamfinders_card}}",
+                "style": {
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
+                    "color": "#424242",
+                    "margin": "0",
+                    "whiteSpace": "pre-wrap"
+                },
+                "parentId": "DreamFinders_Card"
+            },
+            {
+                "name": "DRHorton_Card",
+                "type": "FlexContainer",
+                "direction": "column",
+                "minHeight": "180px",
+                "style": {
+                    "flex": "1 1 300px",
+                    "backgroundColor": "#ffffff",
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                },
+                "parentId": "CardsRow_Container"
+            },
+            {
+                "name": "DRHorton_Card_Title",
+                "type": "Header",
+                "text": "DR Horton",
+                "style": {
+                    "fontSize": "20px",
+                    "fontWeight": "600",
+                    "color": "#1a1a1a",
+                    "margin": "0 0 12px 0",
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "8px"
+                },
+                "parentId": "DRHorton_Card"
+            },
+            {
+                "name": "DRHorton_Card_Text",
+                "type": "Paragraph",
+                "text": "{{drhorton_card}}",
+                "style": {
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
+                    "color": "#424242",
+                    "margin": "0",
+                    "whiteSpace": "pre-wrap"
+                },
+                "parentId": "DRHorton_Card"
+            },
+            {
+                "name": "Pulte_Card",
+                "type": "FlexContainer",
+                "direction": "column",
+                "minHeight": "180px",
+                "style": {
+                    "flex": "1 1 300px",
+                    "backgroundColor": "#ffffff",
+                    "borderRadius": "8px",
+                    "padding": "20px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                    "border": "1px solid #e0e0e0"
+                },
+                "parentId": "CardsRow_Container"
+            },
+            {
+                "name": "Pulte_Card_Title",
+                "type": "Header",
+                "text": "Pulte",
+                "style": {
+                    "fontSize": "20px",
+                    "fontWeight": "600",
+                    "color": "#1a1a1a",
+                    "margin": "0 0 12px 0",
+                    "borderBottom": "2px solid #667eea",
+                    "paddingBottom": "8px"
+                },
+                "parentId": "Pulte_Card"
+            },
+            {
+                "name": "Pulte_Card_Text",
+                "type": "Paragraph",
+                "text": "{{pulte_card}}",
+                "style": {
+                    "fontSize": "14px",
+                    "lineHeight": "1.6",
+                    "color": "#424242",
+                    "margin": "0",
+                    "whiteSpace": "pre-wrap"
+                },
+                "parentId": "Pulte_Card"
             }
         ]
     }
